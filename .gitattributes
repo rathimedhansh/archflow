@@ -1,0 +1,9 @@
+# Store text files with LF in the repository, whatever the contributor's OS or Git settings.
+# (Files regenerated on Windows, e.g. requirements.txt from pip freeze or the evaluation reports, are written with CRLF.)
+* text=auto
+
+# Never touch binary files.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary

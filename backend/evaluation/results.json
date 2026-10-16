@@ -1,0 +1,2282 @@
+{
+ "pipeline": "opencv-1",
+ "summary": {
+  "supported": {
+   "plans": 30,
+   "rejected_as_unsupported": 0,
+   "wall_length_recall_mean": 0.9984277422133501,
+   "wall_length_precision_mean": 1.0,
+   "median_ms": 311.25,
+   "room_mean_iou": 0.9918245056089691,
+   "scale_rel_error_median": 0.03997798153894902,
+   "scale_rel_error_max": 0.07698111420803849,
+   "scale_within_10pct": 1.0,
+   "walls": {
+    "truth": 235,
+    "detected": 237,
+    "matched": 235,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "rooms": {
+    "truth": 145,
+    "detected": 143,
+    "matched": 143,
+    "precision": 1.0,
+    "recall": 0.9862068965517241
+   },
+   "doors": {
+    "truth": 145,
+    "detected": 144,
+    "matched": 144,
+    "precision": 1.0,
+    "recall": 0.993103448275862
+   },
+   "windows": {
+    "truth": 214,
+    "detected": 212,
+    "matched": 212,
+    "precision": 1.0,
+    "recall": 0.9906542056074766
+   },
+   "door_width_error_mean": 0.023324119038502865,
+   "window_width_error_mean": 0.020742617442858262
+  },
+  "real": {
+   "plans": 2,
+   "rejected_as_unsupported": 1,
+   "wall_length_recall_mean": 0.8653385381612599,
+   "wall_length_precision_mean": 0.9984471007533066,
+   "median_ms": 105.35,
+   "room_mean_iou": 0.9813614851451931,
+   "scale_rel_error_median": 0.1412459720730398,
+   "scale_rel_error_max": 0.1412459720730398,
+   "scale_within_10pct": 0.0,
+   "walls": {
+    "truth": 10,
+    "detected": 14,
+    "matched": 8,
+    "precision": 0.9285714285714286,
+    "recall": 0.8
+   },
+   "rooms": {
+    "truth": 4,
+    "detected": 3,
+    "matched": 3,
+    "precision": 1.0,
+    "recall": 0.75
+   },
+   "doors": {
+    "truth": 4,
+    "detected": 1,
+    "matched": 1,
+    "precision": 1.0,
+    "recall": 0.25
+   },
+   "windows": {
+    "truth": 6,
+    "detected": 4,
+    "matched": 4,
+    "precision": 1.0,
+    "recall": 0.6666666666666666
+   },
+   "door_width_error_mean": 0.09523809523809523,
+   "window_width_error_mean": 0.02414070263884445
+  },
+  "hand-drawn": {
+   "plans": 1,
+   "rejected_as_unsupported": 0,
+   "wall_length_recall_mean": 1.0,
+   "wall_length_precision_mean": 1.0,
+   "median_ms": 118.3,
+   "room_mean_iou": 0.9883872929251527,
+   "scale_rel_error_median": null,
+   "scale_rel_error_max": null,
+   "scale_within_10pct": null,
+   "walls": {
+    "truth": 7,
+    "detected": 7,
+    "matched": 7,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "rooms": {
+    "truth": 4,
+    "detected": 4,
+    "matched": 4,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "doors": {
+    "truth": 0,
+    "detected": 0,
+    "matched": 0,
+    "precision": null,
+    "recall": null
+   },
+   "windows": {
+    "truth": 0,
+    "detected": 0,
+    "matched": 0,
+    "precision": null,
+    "recall": null
+   },
+   "door_width_error_mean": null,
+   "window_width_error_mean": null
+  },
+  "out-of-scope": {
+   "plans": 7,
+   "rejected_as_unsupported": 1,
+   "wall_length_recall_mean": 0.752168889498008,
+   "wall_length_precision_mean": 0.9105081449893598,
+   "median_ms": 262.0,
+   "room_mean_iou": 0.9887746996513984,
+   "scale_rel_error_median": 0.06849315068493164,
+   "scale_rel_error_max": 0.39849624060150385,
+   "scale_within_10pct": 0.7142857142857143,
+   "walls": {
+    "truth": 56,
+    "detected": 69,
+    "matched": 40,
+    "precision": 0.927536231884058,
+    "recall": 0.7142857142857143
+   },
+   "rooms": {
+    "truth": 32,
+    "detected": 21,
+    "matched": 19,
+    "precision": 0.9047619047619048,
+    "recall": 0.59375
+   },
+   "doors": {
+    "truth": 34,
+    "detected": 20,
+    "matched": 20,
+    "precision": 1.0,
+    "recall": 0.5882352941176471
+   },
+   "windows": {
+    "truth": 46,
+    "detected": 30,
+    "matched": 28,
+    "precision": 0.9333333333333333,
+    "recall": 0.6086956521739131
+   },
+   "door_width_error_mean": 0.017677643143084544,
+   "window_width_error_mean": 0.01519078347664713
+  }
+ },
+ "cases": [
+  {
+   "name": "supported-01",
+   "group": "supported",
+   "description": "94 px/m, walls 0.2/0.12 m, 2-line windows, furniture, noise 8, JPEG q70, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 894.3,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": 6,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 1.0,
+    "doors": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.015493404668177724,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.024036315660157095,
+    "scale_rel_error": 0.010281477990142146
+   }
+  },
+  {
+   "name": "supported-02",
+   "group": "supported",
+   "description": "90 px/m, walls 0.2/0.1 m, 3-line windows",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 271.4,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 8,
+     "detected": 8,
+     "matched": 8,
+     "correct": 8,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9978802757470596,
+    "doors": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.012234993049343912,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.008099827037025692,
+    "scale_rel_error": 0.007208561060752166
+   }
+  },
+  {
+   "name": "supported-03",
+   "group": "supported",
+   "description": "93 px/m, walls 0.25/0.15 m, 3-line windows, furniture, noise 4",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 539.4,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": 6,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9865330634644391,
+    "doors": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.010790341672632016,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.005441439342392795,
+    "scale_rel_error": 0.013480409761210932
+   }
+  },
+  {
+   "name": "supported-04",
+   "group": "supported",
+   "description": "101 px/m, walls 0.2/0.1 m, 2-line windows, furniture, JPEG q85, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.994,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 654.7,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 10,
+     "detected": 10,
+     "matched": 10,
+     "correct": 10,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9901185016740197,
+    "doors": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.027335130844014066,
+    "windows": {
+     "truth": 9,
+     "detected": 9,
+     "matched": 9,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.007781092649051569,
+    "scale_rel_error": 0.011585358306081005
+   }
+  },
+  {
+   "name": "supported-05",
+   "group": "supported",
+   "description": "67 px/m, walls 0.25/0.1 m, 3-line windows, furniture, JPEG q70, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.998,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 250.7,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 8,
+     "detected": 8,
+     "matched": 8,
+     "correct": 8,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9856674729316175,
+    "doors": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.03809887770246282,
+    "windows": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.014010339411575036,
+    "scale_rel_error": 0.05621199722546901
+   }
+  },
+  {
+   "name": "supported-06",
+   "group": "supported",
+   "description": "63 px/m, walls 0.3/0.15 m, 2-line windows, furniture, noise 8",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 360.8,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 10,
+     "detected": 10,
+     "matched": 10,
+     "correct": 10,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9770786399752375,
+    "doors": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.018025572069919893,
+    "windows": {
+     "truth": 8,
+     "detected": 8,
+     "matched": 8,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.009624999693641941,
+    "scale_rel_error": 0.06534420401061479
+   }
+  },
+  {
+   "name": "supported-07",
+   "group": "supported",
+   "description": "100 px/m, walls 0.25/0.1 m, 2-line windows, noise 4, JPEG q70",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 733.2,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 8,
+     "detected": 8,
+     "matched": 8,
+     "correct": 8,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.996949404066166,
+    "doors": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.010875463401980215,
+    "windows": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.02665186726264901,
+    "scale_rel_error": 0.020236734881557517
+   }
+  },
+  {
+   "name": "supported-08",
+   "group": "supported",
+   "description": "87 px/m, walls 0.2/0.12 m, 3-line windows",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 252.3,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": 6,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9979066022544284,
+    "doors": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.014368233463429943,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.025646534512207816,
+    "scale_rel_error": 0.01738164778481541
+   }
+  },
+  {
+   "name": "supported-09",
+   "group": "supported",
+   "description": "84 px/m, walls 0.25/0.12 m, 3-line windows, furniture, noise 4, blur 0.6",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 427.9,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": 6,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9877829514415727,
+    "doors": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.011800058933459423,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.012241544798129465,
+    "scale_rel_error": 0.06356075947338144
+   }
+  },
+  {
+   "name": "supported-10",
+   "group": "supported",
+   "description": "62 px/m, walls 0.2/0.1 m, 3-line windows, furniture",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.916,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 189.7,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 9,
+     "detected": 9,
+     "matched": 9,
+     "correct": 9,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9960202817683896,
+    "doors": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.01620958719345252,
+    "windows": {
+     "truth": 10,
+     "detected": 10,
+     "matched": 10,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.03678134994681699,
+    "scale_rel_error": 0.04301224036725637
+   }
+  },
+  {
+   "name": "supported-11",
+   "group": "supported",
+   "description": "82 px/m, walls 0.25/0.15 m, 2-line windows, blur 0.6, JPEG q85",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 204.9,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0000000000000002,
+    "walls": {
+     "truth": 8,
+     "detected": 8,
+     "matched": 8,
+     "correct": 8,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 1.0,
+    "doors": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.01469172580370634,
+    "windows": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.009367042234058305,
+    "scale_rel_error": 0.012857822205431288
+   }
+  },
+  {
+   "name": "supported-12",
+   "group": "supported",
+   "description": "60 px/m, walls 0.2/0.1 m, 3-line windows, JPEG q70, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 135.2,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": 6,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9896094867278721,
+    "doors": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.01831674096442015,
+    "windows": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.013632585662512511,
+    "scale_rel_error": 0.07211306731922894
+   }
+  },
+  {
+   "name": "supported-13",
+   "group": "supported",
+   "description": "79 px/m, walls 0.25/0.12 m, 3-line windows, JPEG q85",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 304.7,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": 6,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9925237615494581,
+    "doors": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.021588855405352006,
+    "windows": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.030346061264413554,
+    "scale_rel_error": 0.07541263478900737
+   }
+  },
+  {
+   "name": "supported-14",
+   "group": "supported",
+   "description": "62 px/m, walls 0.25/0.15 m, 2-line windows, noise 8, JPEG q85, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.997,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 380.3,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": 6,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 1.0,
+    "doors": {
+     "truth": 3,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.044347070850769076,
+    "windows": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.03150670359033604,
+    "scale_rel_error": 0.07698111420803849
+   }
+  },
+  {
+   "name": "supported-15",
+   "group": "supported",
+   "description": "82 px/m, walls 0.3/0.1 m, 2-line windows, furniture, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 200.0,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": 7,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 1.0,
+    "doors": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.024366664494942486,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.008149134329878814,
+    "scale_rel_error": 0.036943722710641676
+   }
+  },
+  {
+   "name": "supported-16",
+   "group": "supported",
+   "description": "61 px/m, walls 0.2/0.12 m, 2-line windows, noise 8, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.991,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 124.0,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 9,
+     "detected": 9,
+     "matched": 9,
+     "correct": 9,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.998079322345525,
+    "doors": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.04916665118966781,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.03343866086230967,
+    "scale_rel_error": 0.05503194993465967
+   }
+  },
+  {
+   "name": "supported-17",
+   "group": "supported",
+   "description": "88 px/m, walls 0.3/0.1 m, 3-line windows, furniture, noise 4, JPEG q70",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 505.8,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 8,
+     "detected": 8,
+     "matched": 8,
+     "correct": 8,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9864155668592016,
+    "doors": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.011974294912162042,
+    "windows": {
+     "truth": 9,
+     "detected": 9,
+     "matched": 9,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.026259577375096807,
+    "scale_rel_error": 0.015617837871158002
+   }
+  },
+  {
+   "name": "supported-18",
+   "group": "supported",
+   "description": "79 px/m, walls 0.3/0.1 m, 2-line windows, noise 8, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.98,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 734.3,
+   "scores": {
+    "wall_length_recall": 0.9827688833524586,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 10,
+     "detected": 11,
+     "matched": 10,
+     "correct": 11,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 7,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.8571428571428571
+    },
+    "room_mean_iou": 0.9869858997621166,
+    "doors": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.03954926711465873,
+    "windows": {
+     "truth": 8,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.875
+    },
+    "window_width_error": 0.03276466534307993,
+    "scale_rel_error": 0.06421576996854061
+   }
+  },
+  {
+   "name": "supported-19",
+   "group": "supported",
+   "description": "92 px/m, walls 0.25/0.12 m, 2-line windows, furniture, blur 0.6, JPEG q85, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 302.2,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": 7,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.988754401537334,
+    "doors": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.012765473753535967,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.009112970634147103,
+    "scale_rel_error": 0.07018752223639789
+   }
+  },
+  {
+   "name": "supported-20",
+   "group": "supported",
+   "description": "61 px/m, walls 0.25/0.15 m, 2-line windows, noise 8, JPEG q70",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.99,
+   "scale_source": "doors",
+   "warnings": [
+    "2 wall openings could not be identified as a door or window and were left as gaps in the wall."
+   ],
+   "ms": 345.3,
+   "scores": {
+    "wall_length_recall": 0.9893382676887831,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 10,
+     "detected": 12,
+     "matched": 10,
+     "correct": 12,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.990201430025823,
+    "doors": {
+     "truth": 7,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.8571428571428571
+    },
+    "door_width_error": 0.023109438073153996,
+    "windows": {
+     "truth": 10,
+     "detected": 10,
+     "matched": 10,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.04185103038775919,
+    "scale_rel_error": 0.01304756682117218
+   }
+  },
+  {
+   "name": "supported-21",
+   "group": "supported",
+   "description": "64 px/m, walls 0.25/0.1 m, 3-line windows, noise 4, JPEG q85",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 380.8,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 8,
+     "detected": 8,
+     "matched": 8,
+     "correct": 8,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9863372531085745,
+    "doors": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.014286311542534508,
+    "windows": {
+     "truth": 9,
+     "detected": 9,
+     "matched": 9,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.009835089568019794,
+    "scale_rel_error": 0.010005216014760454
+   }
+  },
+  {
+   "name": "supported-22",
+   "group": "supported",
+   "description": "94 px/m, walls 0.25/0.15 m, 3-line windows, noise 8, blur 0.6, JPEG q85",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 704.2,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 9,
+     "detected": 8,
+     "matched": 9,
+     "correct": 8,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9976613526512011,
+    "doors": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.013059462497840672,
+    "windows": {
+     "truth": 10,
+     "detected": 10,
+     "matched": 10,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.024842252893966594,
+    "scale_rel_error": 0.008879198946634104
+   }
+  },
+  {
+   "name": "supported-23",
+   "group": "supported",
+   "description": "91 px/m, walls 0.3/0.15 m, 3-line windows, blur 0.6, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.97,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 317.8,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": 7,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9877439982459424,
+    "doors": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.04583141212700205,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.021650964026762327,
+    "scale_rel_error": 0.017974711002347606
+   }
+  },
+  {
+   "name": "supported-24",
+   "group": "supported",
+   "description": "56 px/m, walls 0.3/0.12 m, 3-line windows, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.988,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 142.7,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 9,
+     "detected": 8,
+     "matched": 9,
+     "correct": 8,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9743439200260174,
+    "doors": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.061748435621040744,
+    "windows": {
+     "truth": 9,
+     "detected": 9,
+     "matched": 9,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.013506829889909897,
+    "scale_rel_error": 0.051597747146087995
+   }
+  },
+  {
+   "name": "supported-25",
+   "group": "supported",
+   "description": "89 px/m, walls 0.25/0.15 m, 3-line windows",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 212.6,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0000000000000002,
+    "walls": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": 7,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9850275890358218,
+    "doors": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.011363341159431564,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.026484185197450008,
+    "scale_rel_error": 0.06478000167783561
+   }
+  },
+  {
+   "name": "supported-26",
+   "group": "supported",
+   "description": "106 px/m, walls 0.25/0.1 m, 3-line windows, furniture, noise 4, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.988,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 748.6,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": 7,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 1.0,
+    "doors": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.030145929860660087,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.022980378727485817,
+    "scale_rel_error": 0.06458420219926891
+   }
+  },
+  {
+   "name": "supported-27",
+   "group": "supported",
+   "description": "70 px/m, walls 0.2/0.1 m, 3-line windows, JPEG q85, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.989,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 253.5,
+   "scores": {
+    "wall_length_recall": 0.9807251153592615,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 10,
+     "detected": 11,
+     "matched": 10,
+     "correct": 11,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 7,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.8571428571428571
+    },
+    "room_mean_iou": 0.9817724385303683,
+    "doors": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.03159571078255015,
+    "windows": {
+     "truth": 11,
+     "detected": 10,
+     "matched": 10,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.9090909090909091
+    },
+    "window_width_error": 0.012881642413231923,
+    "scale_rel_error": 0.026729392382073253
+   }
+  },
+  {
+   "name": "supported-28",
+   "group": "supported",
+   "description": "69 px/m, walls 0.2/0.15 m, 2-line windows, JPEG q70",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 385.1,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 10,
+     "detected": 10,
+     "matched": 10,
+     "correct": 10,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 1.0,
+    "doors": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.013730327423213461,
+    "windows": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.034403188611349736,
+    "scale_rel_error": 0.0730800884833937
+   }
+  },
+  {
+   "name": "supported-29",
+   "group": "supported",
+   "description": "58 px/m, walls 0.25/0.15 m, 2-line windows, furniture, noise 4, JPEG q85, doors next to corners",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [
+    "Low resolution (772\u00d7784 px). Thin walls may be missed; 800+ px is recommended."
+   ],
+   "ms": 215.1,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": 7,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9933415545408866,
+    "doors": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.02202516955403032,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.011906911906615235,
+    "scale_rel_error": 0.045331274853017765
+   }
+  },
+  {
+   "name": "supported-30",
+   "group": "supported",
+   "description": "70 px/m, walls 0.3/0.1 m, 3-line windows, furniture",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.997,
+   "scale_source": "doors",
+   "warnings": [],
+   "ms": 164.9,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": 7,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 1.0,
+    "doors": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.020829625025541216,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.03704333805371715,
+    "scale_rel_error": 0.023033665930653847
+   }
+  },
+  {
+   "name": "hollow-walls",
+   "group": "out-of-scope",
+   "description": "Walls drawn as two thin outlines instead of solid strokes",
+   "notes": [],
+   "supported": false,
+   "reason": "No walls drawn as solid, thick lines were found. This happens when walls are drawn as two thin outlines or hatched, or when the image is not a 2D line drawing (for example a 3D rendering or a photo).",
+   "overall_confidence": 0.0,
+   "scale_source": null,
+   "warnings": [
+    "Nothing was generated automatically. You can still trace the plan by hand in the editor."
+   ],
+   "ms": 171.1,
+   "scores": {
+    "wall_length_recall": 0.0,
+    "wall_length_precision": null,
+    "walls": {
+     "truth": 7,
+     "detected": 0,
+     "matched": 0,
+     "correct": 0,
+     "precision": null,
+     "recall": 0.0
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 0,
+     "matched": 0,
+     "correct": null,
+     "precision": null,
+     "recall": 0.0
+    },
+    "room_mean_iou": null,
+    "doors": {
+     "truth": 4,
+     "detected": 0,
+     "matched": 0,
+     "correct": null,
+     "precision": null,
+     "recall": 0.0
+    },
+    "door_width_error": null,
+    "windows": {
+     "truth": 6,
+     "detected": 0,
+     "matched": 0,
+     "correct": null,
+     "precision": null,
+     "recall": 0.0
+    },
+    "window_width_error": null,
+    "scale_rel_error": 0.29203539823008856
+   }
+  },
+  {
+   "name": "plain-openings",
+   "group": "out-of-scope",
+   "description": "Doors drawn as plain gaps, without a swing arc",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "assumed",
+   "warnings": [
+    "5 wall openings could not be identified as a door or window and were left as gaps in the wall."
+   ],
+   "ms": 349.7,
+   "scores": {
+    "wall_length_recall": 0.9556818829256305,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 8,
+     "detected": 13,
+     "matched": 8,
+     "correct": 13,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.989169421908209,
+    "doors": {
+     "truth": 5,
+     "detected": 0,
+     "matched": 0,
+     "correct": null,
+     "precision": null,
+     "recall": 0.0
+    },
+    "door_width_error": null,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.010547028857119492,
+    "scale_rel_error": 0.39849624060150385
+   }
+  },
+  {
+   "name": "rotated-3deg",
+   "group": "out-of-scope",
+   "description": "Scan rotated by 3 degrees",
+   "notes": [
+    "image rotated 3.0\u00b0 (truth coordinates rotated to match)"
+   ],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [
+    "The drawing is rotated by about 3.0\u00b0; it was straightened for detection."
+   ],
+   "ms": 262.0,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 8,
+     "detected": 8,
+     "matched": 8,
+     "correct": 8,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.985007666423596,
+    "doors": {
+     "truth": 5,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.014082249742002142,
+    "windows": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.008326503077002567,
+    "scale_rel_error": 0.06849315068493164
+   }
+  },
+  {
+   "name": "low-resolution",
+   "group": "out-of-scope",
+   "description": "28 px per metre: interior walls under 4 px",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "doors",
+   "warnings": [
+    "Low resolution (445\u00d7343 px). Thin walls may be missed; 800+ px is recommended."
+   ],
+   "ms": 43.8,
+   "scores": {
+    "wall_length_recall": 0.6666666666666666,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 7,
+     "detected": 4,
+     "matched": 4,
+     "correct": 4,
+     "precision": 1.0,
+     "recall": 0.5714285714285714
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 1,
+     "matched": 0,
+     "correct": null,
+     "precision": 0.0,
+     "recall": 0.0
+    },
+    "room_mean_iou": null,
+    "doors": {
+     "truth": 4,
+     "detected": 1,
+     "matched": 1,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.25
+    },
+    "door_width_error": 0.03174603174603149,
+    "windows": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "window_width_error": 0.02940791901176062,
+    "scale_rel_error": 0.08461538461538451
+   }
+  },
+  {
+   "name": "heavy-degradation",
+   "group": "out-of-scope",
+   "description": "Strong blur, noise and JPEG artefacts",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.953,
+   "scale_source": "doors",
+   "warnings": [
+    "6 wall openings could not be identified as a door or window and were left as gaps in the wall."
+   ],
+   "ms": 524.9,
+   "scores": {
+    "wall_length_recall": 0.898758794106312,
+    "wall_length_precision": 1.0000000000000002,
+    "walls": {
+     "truth": 7,
+     "detected": 13,
+     "matched": 7,
+     "correct": 13,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9801952197304623,
+    "doors": {
+     "truth": 4,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.75
+    },
+    "door_width_error": 0.013654512097236622,
+    "windows": {
+     "truth": 7,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.42857142857142855
+    },
+    "window_width_error": 0.020350735294117444,
+    "scale_rel_error": 0.06849315068493164
+   }
+  },
+  {
+   "name": "diagonal-wall",
+   "group": "out-of-scope",
+   "description": "One 45-degree wall (chamfered corner)",
+   "notes": [
+    "top-right corner chamfered with a diagonal wall (not in the truth walls; partition geometry near it is approximate)"
+   ],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.952,
+   "scale_source": "doors",
+   "warnings": [
+    "1 wall opening could not be identified as a door or window and was left as a gap in the wall."
+   ],
+   "ms": 345.3,
+   "scores": {
+    "wall_length_recall": 0.9286934971223889,
+    "wall_length_precision": 0.9976739758160035,
+    "walls": {
+     "truth": 10,
+     "detected": 10,
+     "matched": 8,
+     "correct": 10,
+     "precision": 1.0,
+     "recall": 0.8
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 5,
+     "matched": 4,
+     "correct": null,
+     "precision": 0.8,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9895011901947245,
+    "doors": {
+     "truth": 6,
+     "detected": 6,
+     "matched": 6,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "door_width_error": 0.01417980938505438,
+    "windows": {
+     "truth": 5,
+     "detected": 7,
+     "matched": 5,
+     "correct": null,
+     "precision": 0.7142857142857143,
+     "recall": 1.0
+    },
+    "window_width_error": 0.00934068799449594,
+    "scale_rel_error": 0.042253521126760646
+   }
+  },
+  {
+   "name": "drawing-frame",
+   "group": "out-of-scope",
+   "description": "A thick title-block frame around the sheet",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.884,
+   "scale_source": "doors",
+   "warnings": [
+    "A drawing frame or border around the plan was ignored."
+   ],
+   "ms": 230.9,
+   "scores": {
+    "wall_length_recall": 0.815381385665058,
+    "wall_length_precision": 0.46537489412015554,
+    "walls": {
+     "truth": 9,
+     "detected": 21,
+     "matched": 5,
+     "correct": 16,
+     "precision": 0.7619047619047619,
+     "recall": 0.5555555555555556
+    },
+    "rooms": {
+     "truth": 6,
+     "detected": 1,
+     "matched": 1,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.16666666666666666
+    },
+    "room_mean_iou": 1.0,
+    "doors": {
+     "truth": 6,
+     "detected": 5,
+     "matched": 5,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.8333333333333334
+    },
+    "door_width_error": 0.014725612745098083,
+    "windows": {
+     "truth": 9,
+     "detected": 1,
+     "matched": 1,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.1111111111111111
+    },
+    "window_width_error": 0.013171826625386724,
+    "scale_rel_error": 0.014492753623188553
+   }
+  },
+  {
+   "name": "m2-sample",
+   "group": "hand-drawn",
+   "description": "The plain 4-room test drawing from Milestone 2 (hand-authored truth)",
+   "notes": [],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 1.0,
+   "scale_source": "assumed",
+   "warnings": [],
+   "ms": 118.3,
+   "scores": {
+    "wall_length_recall": 1.0,
+    "wall_length_precision": 1.0,
+    "walls": {
+     "truth": 7,
+     "detected": 7,
+     "matched": 7,
+     "correct": 7,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "room_mean_iou": 0.9883872929251527,
+    "doors": {
+     "truth": 0,
+     "detected": 0,
+     "matched": 0,
+     "correct": null,
+     "precision": null,
+     "recall": null
+    },
+    "door_width_error": null,
+    "windows": {
+     "truth": 0,
+     "detected": 0,
+     "matched": 0,
+     "correct": null,
+     "precision": null,
+     "recall": null
+    },
+    "window_width_error": null,
+    "scale_rel_error": null
+   }
+  },
+  {
+   "name": "real-apartment",
+   "group": "real",
+   "description": "Real 638\u00d7480 apartment plan: thin walls, furniture, feet/inch dimensions, bifold balcony door (hand-traced truth)",
+   "notes": [
+    "balcony (railing, no walls) is not a truth room",
+    "bifold door is not a supported door symbol"
+   ],
+   "supported": true,
+   "reason": null,
+   "overall_confidence": 0.771,
+   "scale_source": "doors",
+   "warnings": [
+    "Low resolution (638\u00d7480 px). Thin walls may be missed; 800+ px is recommended.",
+    "About 36% of the thick line work was not recognised as straight walls (diagonal or curved walls, symbols or fills). Check the result against the plan.",
+    "3 wall openings could not be identified as a door or window and were left as gaps in the wall."
+   ],
+   "ms": 112.7,
+   "scores": {
+    "wall_length_recall": 0.8653385381612599,
+    "wall_length_precision": 0.9984471007533066,
+    "walls": {
+     "truth": 10,
+     "detected": 14,
+     "matched": 8,
+     "correct": 13,
+     "precision": 0.9285714285714286,
+     "recall": 0.8
+    },
+    "rooms": {
+     "truth": 4,
+     "detected": 3,
+     "matched": 3,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.75
+    },
+    "room_mean_iou": 0.9813614851451931,
+    "doors": {
+     "truth": 4,
+     "detected": 1,
+     "matched": 1,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.25
+    },
+    "door_width_error": 0.09523809523809523,
+    "windows": {
+     "truth": 6,
+     "detected": 4,
+     "matched": 4,
+     "correct": null,
+     "precision": 1.0,
+     "recall": 0.6666666666666666
+    },
+    "window_width_error": 0.02414070263884445,
+    "scale_rel_error": 0.1412459720730398
+   }
+  },
+  {
+   "name": "real-3d-render",
+   "group": "real",
+   "description": "A 3D rendering of a house, not a floor plan (correct result: rejected)",
+   "notes": [],
+   "supported": false,
+   "reason": "No walls drawn as solid, thick lines were found. This happens when walls are drawn as two thin outlines or hatched, or when the image is not a 2D line drawing (for example a 3D rendering or a photo).",
+   "overall_confidence": 0.0,
+   "scale_source": null,
+   "warnings": [
+    "Nothing was generated automatically. You can still trace the plan by hand in the editor."
+   ],
+   "ms": 98.0,
+   "scores": {
+    "wall_length_recall": null,
+    "wall_length_precision": null,
+    "walls": {
+     "truth": 0,
+     "detected": 0,
+     "matched": 0,
+     "correct": 0,
+     "precision": null,
+     "recall": null
+    },
+    "rooms": {
+     "truth": 0,
+     "detected": 0,
+     "matched": 0,
+     "correct": null,
+     "precision": null,
+     "recall": null
+    },
+    "room_mean_iou": null,
+    "doors": {
+     "truth": 0,
+     "detected": 0,
+     "matched": 0,
+     "correct": null,
+     "precision": null,
+     "recall": null
+    },
+    "door_width_error": null,
+    "windows": {
+     "truth": 0,
+     "detected": 0,
+     "matched": 0,
+     "correct": null,
+     "precision": null,
+     "recall": null
+    },
+    "window_width_error": null,
+    "scale_rel_error": null
+   }
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+Copyright (c) 2026 the ARCHFLOW authors. All rights reserved.
+
+This software and its documentation are proprietary. The source code is made publicly visible for viewing and
+evaluation only.
+
+No license is granted to use, copy, modify, merge, publish, distribute, sublicense or sell this software or any part
+of it, or to create derivative works from it, without prior written permission from the copyright holder.
+
+Making this repository public on GitHub lets GitHub users view and fork it on GitHub as provided by GitHub's Terms of
+Service. That grants no other rights.
+
+Third-party components used by this project (listed in frontend/package.json and backend/requirements.txt) are
+licensed under their own terms.

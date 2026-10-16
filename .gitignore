@@ -1,0 +1,12 @@
+.env
+.env.local
+node_modules/
+.next/
+.venv/
+__pycache__/
+.pytest_cache/
+backend/storage/
+# User-supplied sample images of unknown licence: kept local, not versioned (see backend/evaluation/real/README.md)
+backend/evaluation/real/*.png
+*.log
+.DS_Store
