@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import AccountButton from "@/components/AccountButton";
 import ApiStatus from "@/components/ApiStatus";
 import Logo from "@/components/Logo";
 import { pageWidth } from "@/components/ui";
 
-/** App header: wordmark, the properties link and a quiet engine status. */
+/** App header: wordmark, the properties link, sign-out (when signed in) and a quiet engine status. */
 export default function SiteHeader() {
   const path = usePathname();
   const inProperties = path.startsWith("/projects") || path.startsWith("/plans");
@@ -24,6 +25,7 @@ export default function SiteHeader() {
           >
             Properties
           </Link>
+          <AccountButton />
           <ApiStatus />
         </nav>
       </div>

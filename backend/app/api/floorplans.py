@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.config import settings
-from app.errors import FileTooLarge, InvalidImage
+from app.errors import FileTooLarge, InvalidImage, ServerBusy
 from app.processing.image_intake import normalize_upload
+from app.security.limits import upload_slots
 from app.storage.floorplans import FloorPlanRecord, FloorPlanStore
 
 router = APIRouter(prefix="/floorplans", tags=["floorplans"])
@@ -47,17 +49,24 @@ async def _read_limited(file: UploadFile, limit_bytes: int) -> bytes:
 async def upload_floorplan(
     file: UploadFile, store: FloorPlanStore = Depends(get_store)
 ) -> FloorPlanResponse:
-    data = await _read_limited(file, settings.max_upload_mb * 1024 * 1024)
-    if not data:
-        raise InvalidImage("The uploaded file is empty.")
-    image = normalize_upload(data)
-    record = store.create(
-        png_bytes=image.png_bytes,
-        original_filename=file.filename or "floorplan",
-        source_format=image.source_format,
-        width=image.width,
-        height=image.height,
-    )
+    # Decoding is the memory-heavy part: cap how many run at once instead of letting them pile up.
+    slot = upload_slots.try_acquire(settings.max_concurrent_uploads)
+    if slot is None:
+        raise ServerBusy("Another upload is being processed. Please try again in a few seconds.", retry_after=5)
+    try:
+        data = await _read_limited(file, settings.max_upload_mb * 1024 * 1024)
+        if not data:
+            raise InvalidImage("The uploaded file is empty.")
+        image = await run_in_threadpool(normalize_upload, data)  # keep the server responsive meanwhile
+        record = store.create(
+            png_bytes=image.png_bytes,
+            original_filename=file.filename or "floorplan",
+            source_format=image.source_format,
+            width=image.width,
+            height=image.height,
+        )
+    finally:
+        slot.release()
     return FloorPlanResponse.from_record(record)
 
 

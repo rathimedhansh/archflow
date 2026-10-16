@@ -18,11 +18,14 @@ from collections.abc import Iterator
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
+from starlette.background import BackgroundTask
 
 from app.api.floorplans import get_store
-from app.errors import InvalidStructure, NotFound
+from app.config import settings
+from app.errors import InvalidStructure, NotFound, ServerBusy
 from app.interpretation.opencv import StageEvent, run_path_stages
 from app.schema.interpretation import Interpretation
+from app.security.limits import interpretation_slots
 from app.storage.floorplans import FloorPlanStore
 
 router = APIRouter(prefix="/floorplans", tags=["interpretation"])
@@ -37,6 +40,10 @@ def _line(obj: dict) -> bytes:
 def interpret(plan_id: str, store: FloorPlanStore = Depends(get_store)) -> StreamingResponse:
     record = store.get(plan_id)  # 404 before the stream starts
     path = store.image_path(plan_id)
+    # The CV pipeline is CPU- and memory-heavy: answer 503 now rather than queue runs that could exhaust memory.
+    slot = interpretation_slots.try_acquire(settings.max_concurrent_interpretations)
+    if slot is None:
+        raise ServerBusy("Automatic detection is busy with another plan. Please try again in a few seconds.", retry_after=10)
 
     def events() -> Iterator[bytes]:
         try:
@@ -50,10 +57,14 @@ def interpret(plan_id: str, store: FloorPlanStore = Depends(get_store)) -> Strea
         except Exception:  # headers are already sent: report in-band instead of a broken stream
             log.exception("Interpretation stream failed")
             yield _line({"type": "error", "message": "Automatic detection failed unexpectedly. You can still trace the plan by hand."})
+        finally:
+            slot.release()
 
     # no-transform/no-buffering: proxies must pass progress lines through as they are produced.
+    # The background task frees the slot too if the stream never starts (client gone); release is idempotent.
     return StreamingResponse(events(), media_type="application/x-ndjson",
-                             headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"})
+                             headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
+                             background=BackgroundTask(slot.release))
 
 
 @router.get("/{plan_id}/interpretation", response_model=Interpretation)

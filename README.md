@@ -33,8 +33,8 @@ test results and known limits of every milestone.
   The scale is only an estimate until you calibrate it. Room names and written dimensions are not read (no OCR).
 * **VR has been verified only with an emulated headset** (Meta's IWER WebXR emulator in automated browser tests).
   It has **not** been tested on a physical headset.
-* **No accounts or permissions.** Anyone who can reach the backend can manage every property; only buyer links are
-  unguessable. Run it on a trusted machine or network.
+* **No per-user accounts.** Developers share one sign-in password (see [Sign-in](#sign-in)); it is off for local use.
+  Buyer links stay public and unguessable. Public deployment is not set up yet (see PROGRESS.md).
 * One storey per property. Surroundings are always invented for presentation and labelled as illustrative; they never
   show the property's real site.
 
@@ -102,6 +102,39 @@ Open http://localhost:3000. The header shows *Engine online* when the frontend c
 To stop, press **Ctrl+C** in each window (frontend first). Saved properties stay on disk in `backend/storage/`.
 `NEXT_PUBLIC_API_URL` is built into the frontend at `npm run build`, so rebuild after changing it.
 
+### Sign-in
+
+Locally, sign-in is **off** by default and everything works without a password. In this development mode (the
+default) the backend **answers only this computer**; requests from other machines get 403, so a server started without
+its production settings exposes nothing. A Quest connected with `adb reverse` counts as this computer. Sign-in is
+**required** when the backend runs with `ARCHFLOW_ENV=production`, which refuses to start without it (and refuses
+`ARCHFLOW_RATE_LIMITS=false` or `ARCHFLOW_COOKIE_SECURE=false`).
+
+1. Create the password hash on your own machine (the password is asked twice, never shown, stored or sent):
+   ```powershell
+   cd backend
+   .\.venv\Scripts\python -m app.security.passwd
+   ```
+2. Give the backend two environment variables (never commit them): `ARCHFLOW_ADMIN_PASSWORD_HASH` (the printed
+   hash) and `ARCHFLOW_SESSION_SECRET` (32+ random characters, e.g. from
+   `python -c "import secrets; print(secrets.token_urlsafe(48))"`). Restart the backend.
+3. Developers sign in at `/login` with the password; tell it to them in person or through a password manager.
+   **Sign out** is in the header. Sessions last 12 hours and are renewed while in use.
+
+To sign everyone out (e.g. after someone leaves), set a new password hash or session secret and restart.
+
+What is protected: every `/api` route except `/api/health`, the sign-in routes and the buyer link
+`/api/share/{token}`. Buyer pages (`/share/...`) never ask for a password. With sign-in on, every change must carry the
+header `X-ARCHFLOW-CSRF: 1` (the frontend adds it), uploads and automatic detection are rate limited per client
+(on by default in production), sign-in attempts are limited per client and overall, and at most 2 uploads, 1 detection
+and 2 password checks are processed at the same time (others get "busy, try again"). Limits are kept in memory, so run
+the backend as a single process. All settings are listed in [.env.example](.env.example).
+
+The client address used for limits is the one uvicorn reports. By default uvicorn takes it from `X-Forwarded-For` for
+connections from this machine (`127.0.0.1`/`::1`), so a reverse proxy on the same machine must overwrite that header
+with the real client address (Caddy does by default) and be the only way in; without a proxy in front, start uvicorn
+with `--forwarded-allow-ips=""`.
+
 ## Using it
 
 1. **Properties** (`/projects`): every property as a card with its plan, status, rooms, area and last update.
@@ -160,7 +193,9 @@ VR uses the same model and canvas through the standard WebXR API; no extra servi
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/api/health` | Liveness |
+| GET | `/api/health` | Liveness (public) |
+| GET | `/api/auth/me` | Whether sign-in is on and this browser is signed in (public) |
+| POST | `/api/auth/login` / `/api/auth/logout` | Sign in with `{password}` (sets the session cookie) / sign out (public, rate limited) |
 | POST | `/api/floorplans` | Upload PNG/JPG (`multipart/form-data`, field `file`) |
 | GET | `/api/floorplans/{id}` | Floor plan metadata |
 | GET | `/api/floorplans/{id}/image` | Normalized PNG |
@@ -173,8 +208,10 @@ VR uses the same model and canvas through the standard WebXR API; no extra servi
 | POST / DELETE | `/api/projects/{id}/share` | Publish or update the buyer page / switch the link off |
 | GET | `/api/share/{token}` | **Public, read-only**: the published property and plan (no internal ids) |
 
-Errors use `{"error": {"code": "...", "message": "..."}}`. Data is stored as files under `backend/storage/`
-(`floorplans/`, `projects/`, `shares/`), which is git-ignored.
+Errors use `{"error": {"code": "...", "message": "..."}}`; with sign-in on also 401 `unauthorized`, 403 `csrf_failed`,
+429 `rate_limited` and 503 `busy` (both with `Retry-After`). Every route not marked public needs a session when
+sign-in is on. Data is stored as files under `backend/storage/` (`floorplans/`, `projects/`, `shares/`), which is
+git-ignored.
 
 ## Tests
 

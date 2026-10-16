@@ -1,4 +1,5 @@
 /** Typed client for the ARCHFLOW backend. All backend calls go through here. */
+import { CSRF_HEADER, isPublicPage, loginUrlFor, withAuth } from "@/lib/auth";
 import type { FloorPlanData } from "@/lib/floorplan/types";
 import { parseStreamLine, readLines, type StreamMessage } from "@/lib/interpretation/stream";
 
@@ -116,14 +117,25 @@ function toApiError(status: number, body: unknown): ApiError {
   return new ApiError(`Request failed (${status}).`, status);
 }
 
+/**
+ * The developer session is missing or expired: go to the login page and come back afterwards.
+ * Never on public pages (buyer links, /login), which handle a 401 themselves.
+ */
+function handleUnauthorized(status: number) {
+  if (status !== 401 || typeof window === "undefined") return;
+  const { pathname, search } = window.location;
+  if (!isPublicPage(pathname)) window.location.assign(loginUrlFor(pathname, search));
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(absoluteUrl(path), init);
+    res = await fetch(absoluteUrl(path), withAuth(init));
   } catch {
     throw new ApiError(NETWORK_MESSAGE);
   }
   if (!res.ok) {
+    handleUnauthorized(res.status);
     throw toApiError(res.status, await res.json().catch(() => null));
   }
   if (res.status === 204) return undefined as T;
@@ -145,6 +157,8 @@ function uploadFloorPlan(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", absoluteUrl("/api/floorplans"));
+    xhr.withCredentials = true;
+    xhr.setRequestHeader(CSRF_HEADER, "1");
     xhr.responseType = "json";
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress?.(e.loaded / e.total);
@@ -153,7 +167,10 @@ function uploadFloorPlan(
     xhr.onabort = () => reject(new ApiError("Upload cancelled."));
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.response as FloorPlan);
-      else reject(toApiError(xhr.status, xhr.response));
+      else {
+        handleUnauthorized(xhr.status);
+        reject(toApiError(xhr.status, xhr.response));
+      }
     };
     const form = new FormData();
     form.append("file", file);
@@ -168,12 +185,15 @@ function uploadFloorPlan(
 async function interpret(id: string, onMessage: (msg: StreamMessage) => void, signal?: AbortSignal): Promise<void> {
   let res: Response;
   try {
-    res = await fetch(absoluteUrl(`/api/floorplans/${encodeURIComponent(id)}/interpret`), { method: "POST", signal });
+    res = await fetch(absoluteUrl(`/api/floorplans/${encodeURIComponent(id)}/interpret`), withAuth({ method: "POST", signal }));
   } catch (err) {
     if (signal?.aborted) throw err;
     throw new ApiError(NETWORK_MESSAGE);
   }
-  if (!res.ok) throw toApiError(res.status, await res.json().catch(() => null));
+  if (!res.ok) {
+    handleUnauthorized(res.status);
+    throw toApiError(res.status, await res.json().catch(() => null));
+  }
   if (!res.body) throw new ApiError("The server sent no data.");
   await readLines(res.body, (line) => {
     const msg = parseStreamLine(line);
@@ -181,8 +201,20 @@ async function interpret(id: string, onMessage: (msg: StreamMessage) => void, si
   });
 }
 
+export interface AuthStatus {
+  /** False when the server runs without sign-in (local development). */
+  auth_enabled: boolean;
+  authenticated: boolean;
+}
+
 export const api = {
   health: () => request<HealthResponse>("/api/health", { cache: "no-store" }),
+
+  // ---- developer sign-in ----
+  authStatus: () => request<AuthStatus>("/api/auth/me", { cache: "no-store" }),
+  login: (password: string) => request<AuthStatus>("/api/auth/login", json("POST", { password })),
+  logout: () => request<void>("/api/auth/logout", { method: "POST" }),
+
   uploadFloorPlan,
   getStructure: (id: string) =>
     request<FloorPlanData>(`/api/floorplans/${encodeURIComponent(id)}/structure`, {

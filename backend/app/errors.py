@@ -8,9 +8,10 @@ class ArchflowError(Exception):
     status_code = 400
     code = "bad_request"
 
-    def __init__(self, message: str):
+    def __init__(self, message: str, *, retry_after: int | None = None):
         super().__init__(message)
         self.message = message
+        self.retry_after = retry_after
 
 
 class UnsupportedFileType(ArchflowError):
@@ -47,8 +48,52 @@ class NotFound(ArchflowError):
     code = "not_found"
 
 
-async def archflow_error_handler(_: Request, exc: ArchflowError) -> JSONResponse:
+class Unauthorized(ArchflowError):
+    """No valid developer session (sign-in is on and the request is not public)."""
+
+    status_code = 401
+    code = "unauthorized"
+
+
+class InvalidCredentials(ArchflowError):
+    status_code = 401
+    code = "invalid_credentials"
+
+
+class CsrfRejected(ArchflowError):
+    """A state-changing request without the X-ARCHFLOW-CSRF header (possible cross-site request)."""
+
+    status_code = 403
+    code = "csrf_failed"
+
+
+class LocalOnly(ArchflowError):
+    """A development-mode server was reached from another machine (or through a proxy)."""
+
+    status_code = 403
+    code = "local_only"
+
+
+class RateLimited(ArchflowError):
+    status_code = 429
+    code = "rate_limited"
+
+
+class ServerBusy(ArchflowError):
+    """All processing slots for this kind of work are taken; retry shortly."""
+
+    status_code = 503
+    code = "busy"
+
+
+def error_response(exc: ArchflowError) -> JSONResponse:
+    headers = {"Retry-After": str(exc.retry_after)} if exc.retry_after is not None else None
     return JSONResponse(
         status_code=exc.status_code,
         content={"error": {"code": exc.code, "message": exc.message}},
+        headers=headers,
     )
+
+
+async def archflow_error_handler(_: Request, exc: ArchflowError) -> JSONResponse:
+    return error_response(exc)
