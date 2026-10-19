@@ -3,10 +3,12 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
+# Largest image (width x height) that is decoded at all. The setting may lower it, never raise it.
+MAX_IMAGE_PIXELS_CEILING = 20_000_000
 
 
 class Settings(BaseSettings):
@@ -21,6 +23,8 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     storage_dir: Path = BACKEND_ROOT / "storage"
     max_upload_mb: int = 15
+    # Image size limit in pixels (20 MP = e.g. 5000 x 4000). Values above the ceiling stop startup.
+    max_image_pixels: int = Field(MAX_IMAGE_PIXELS_CEILING, ge=1, le=MAX_IMAGE_PIXELS_CEILING)
 
     # ---- developer sign-in (README "Sign-in") ----
     # scrypt hash of the developer password, made with `python -m app.security.passwd`.

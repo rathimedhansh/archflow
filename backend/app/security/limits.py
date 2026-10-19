@@ -87,6 +87,17 @@ class Slots:
 
 
 limiter = RateLimiter()
+
+
+def enforce(bucket: str, client: str, capacity: int, period_s: float, what: str) -> None:
+    """Spend one token from (bucket, client) or raise 429 with Retry-After."""
+    from app.errors import RateLimited
+
+    wait = limiter.hit(bucket, client, capacity, period_s)
+    if wait:
+        raise RateLimited(f"Too many {what}. Please try again in {wait} s.", retry_after=wait)
+
+
 upload_slots = Slots()
 interpretation_slots = Slots()
 login_slots = Slots()  # each password check needs ~32 MiB (scrypt) and a worker thread

@@ -13,7 +13,8 @@ Then, for /api requests (SecurityMiddleware, inside CORS):
 2. Login attempts are limited whenever sign-in is on: per client, then for all clients together.
 3. Sign-in: everything under /api needs a valid session cookie except the PUBLIC routes below.
    Routes are protected by default, so a route added later cannot be exposed by accident.
-4. Request limits (uploads, automatic detection, other writes) per client, when enabled.
+4. Request limits (uploads, other writes) per client, when enabled. Automatic detection has its own
+   limit, applied by its route after the cheaper refusals (unknown plan, image too large).
 
 Settings are read on every request (not at import), so tests can switch modes with monkeypatch.
 
@@ -35,9 +36,9 @@ from http.cookies import CookieError, SimpleCookie
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.config import settings
-from app.errors import ArchflowError, CsrfRejected, LocalOnly, RateLimited, Unauthorized, error_response
+from app.errors import ArchflowError, CsrfRejected, LocalOnly, Unauthorized, error_response
 from app.security import sessions
-from app.security.limits import limiter
+from app.security.limits import enforce
 
 CSRF_HEADER = b"x-archflow-csrf"
 UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
@@ -53,7 +54,8 @@ PUBLIC_ROUTES = frozenset({
 # The buyer page's data: the published, read-only snapshot behind an unguessable link.
 PUBLIC_SHARE = re.compile(r"^/api/share/[^/]+$")
 UPLOAD_PATH = "/api/floorplans"
-INTERPRET = re.compile(r"^/api/floorplans/[^/]+/interpret$")
+# Automatic detection is limited by its route (api/interpretation.py), after the 404 and image-size checks,
+# so requests that are refused anyway do not use up the detection budget.
 
 MINUTE, DAY = 60.0, 86_400.0
 
@@ -92,9 +94,7 @@ def _header(scope: Scope, wanted: bytes) -> bytes | None:
 
 
 def _limit(bucket: str, client: str, capacity: int, period_s: float, what: str) -> None:
-    wait = limiter.hit(bucket, client, capacity, period_s)
-    if wait:
-        raise RateLimited(f"Too many {what}. Please try again in {wait} s.", retry_after=wait)
+    enforce(bucket, client, capacity, period_s, what)
 
 
 class LocalOnlyMiddleware:
@@ -169,7 +169,5 @@ class SecurityMiddleware:
             if method == "POST" and route == UPLOAD_PATH:
                 _limit("upload", client, settings.rate_upload_per_minute, MINUTE, "uploads")
                 _limit("upload-day", client, settings.rate_upload_per_day, DAY, "uploads today")
-            elif method == "POST" and INTERPRET.match(route):
-                _limit("interpret", client, settings.rate_interpret_per_minute, MINUTE, "automatic detections")
             _limit("write", client, settings.rate_write_per_minute, MINUTE, "changes")
         return claims

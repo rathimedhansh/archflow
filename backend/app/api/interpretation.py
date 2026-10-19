@@ -15,7 +15,7 @@ import json
 import logging
 from collections.abc import Iterator
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
 from starlette.background import BackgroundTask
@@ -24,8 +24,9 @@ from app.api.floorplans import get_store
 from app.config import settings
 from app.errors import InvalidStructure, NotFound, ServerBusy
 from app.interpretation.opencv import StageEvent, run_path_stages
+from app.processing.image_intake import too_large
 from app.schema.interpretation import Interpretation
-from app.security.limits import interpretation_slots
+from app.security.limits import enforce, interpretation_slots
 from app.storage.floorplans import FloorPlanStore
 
 router = APIRouter(prefix="/floorplans", tags=["interpretation"])
@@ -37,9 +38,15 @@ def _line(obj: dict) -> bytes:
 
 
 @router.post("/{plan_id}/interpret")
-def interpret(plan_id: str, store: FloorPlanStore = Depends(get_store)) -> StreamingResponse:
+def interpret(plan_id: str, request: Request, store: FloorPlanStore = Depends(get_store)) -> StreamingResponse:
+    # Cheapest refusals first; none of them uses the detection budget or a detection slot.
     record = store.get(plan_id)  # 404 before the stream starts
     path = store.image_path(plan_id)
+    if record.width * record.height > settings.max_image_pixels:  # e.g. a plan stored before the 20 MP limit
+        raise too_large(record.width * record.height, (record.width, record.height))
+    if settings.rate_limits_enabled:
+        client = request.client.host if request.client else "unknown"
+        enforce("interpret", client, settings.rate_interpret_per_minute, 60.0, "automatic detections")
     # The CV pipeline is CPU- and memory-heavy: answer 503 now rather than queue runs that could exhaust memory.
     slot = interpretation_slots.try_acquire(settings.max_concurrent_interpretations)
     if slot is None:

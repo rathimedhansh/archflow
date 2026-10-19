@@ -1,12 +1,16 @@
 """Stage 1: image -> clean binary "ink" masks at a bounded working resolution, deskewed."""
 
+import io
 import math
 from pathlib import Path
 
 import cv2
 import numpy as np
+from PIL import Image
 
+from app.config import settings
 from app.interpretation.opencv.types import Preprocessed, Unsupported
+from app.processing.image_intake import image_size_text, pixel_limit_text
 
 # Large enough for 5+ px interior walls on typical plans, small enough to stay fast.
 MAX_WORKING_SIDE = 2000
@@ -17,11 +21,31 @@ MIN_SKEW_DEG = 0.25  # below this a scan is treated as straight
 MAX_SKEW_DEG = 10.0  # above this the drawing is not a slightly skewed scan
 
 
+def _too_large(pixels: int, size: tuple[int, int] | None = None) -> Unsupported:
+    return Unsupported(f"The image is too large for automatic detection ({image_size_text(pixels, size)}; "
+                       f"the limit is {pixel_limit_text()}).")
+
+
 def load_image(path: Path) -> np.ndarray:
     data = np.fromfile(str(path), dtype=np.uint8)  # works with non-ASCII paths on Windows
-    image = cv2.imdecode(data, cv2.IMREAD_GRAYSCALE) if data.size else None
+    if not data.size:
+        raise Unsupported("The image could not be decoded.")
+    # Size from the header before decoding (stored plans are normally checked at upload; this also covers
+    # files changed on disk). If the header cannot be read, OpenCV decides below.
+    try:
+        with Image.open(io.BytesIO(data.tobytes())) as header:
+            width, height = header.size
+    except Image.DecompressionBombError:  # Pillow refused it as far over the limit
+        raise Unsupported(f"The image is too large for automatic detection (the limit is {pixel_limit_text()}).") from None
+    except Exception:  # noqa: BLE001 - unreadable header: let the decoder below refuse it
+        width = height = 0
+    if width * height > settings.max_image_pixels:
+        raise _too_large(width * height, (width, height))
+    image = cv2.imdecode(data, cv2.IMREAD_GRAYSCALE)
     if image is None:
         raise Unsupported("The image could not be decoded.")
+    if image.shape[0] * image.shape[1] > settings.max_image_pixels:  # decoded size, whatever the header said
+        raise _too_large(image.shape[0] * image.shape[1], (image.shape[1], image.shape[0]))
     return image
 
 

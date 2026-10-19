@@ -12,7 +12,7 @@ test results and known limits of every milestone.
 ## What it does
 
 1. **Create a property** with a name, an optional address and a description for buyers.
-2. **Upload its floor plan** (PNG or JPG). With *Detect the walls and rooms for me* ticked, an OpenCV pipeline proposes
+2. **Upload its floor plan** (PNG or JPG, up to 15 MB and 20 megapixels). With *Detect the walls and rooms for me* ticked, an OpenCV pipeline proposes
    walls, rooms, doors, windows and a scale estimate, with live progress and a confidence report.
 3. **Review and correct** the result in the 2D editor: delete or redraw elements, rename rooms, set the real scale from a
    known dimension, then save. Nothing is saved until you do. Plans can also be traced entirely by hand.

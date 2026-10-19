@@ -11,8 +11,8 @@ style**, described below, and says so when an image is outside it. Anything it p
 
 | Aspect | Supported |
 |---|---|
-| File | PNG or JPEG, up to 15 MB and 40 megapixels (the upload limits). The image is decoded by content and normalised to PNG. |
-| Resolution | Any size is accepted for upload. For detection, **interior walls should be at least ~4 px thick** in the image. In practice that means about **50 px per metre or more**, usually 800 px or more on the long side for a typical flat. Smaller images get a "low resolution" warning. Large images are processed at up to 2000 px on the long side. |
+| File | PNG or JPEG, up to 15 MB and **20 megapixels** (width × height, e.g. 5000 × 4000 px; an A3 scan at 300 dpi fits, A2 at 300 dpi does not). The image is decoded by content and normalised to PNG. Larger images are refused with their size in the message: scale them down first. |
+| Resolution | Any size up to the limit is accepted for upload. For detection, **interior walls should be at least ~4 px thick** in the image. In practice that means about **50 px per metre or more**, usually 800 px or more on the long side for a typical flat. Smaller images get a "low resolution" warning. Large images are processed at up to 2000 px on the long side. |
 | Drawing type | A single-storey **2D plan view** (looking straight down). One floor per image. The plan may be cropped tightly (walls touching the image edge). |
 | Colours | Dark lines on a light background (black on white is best). Light-on-dark (blueprint) drawings are inverted automatically. Mild scanner noise, blur and JPEG artefacts are tolerated. |
 | Walls | **Solid, filled strokes** that are clearly **thicker than every other line** (text, dimensions, furniture, symbols). They must be **horizontal or vertical**. A scan tilted by up to 10° is straightened automatically. |
