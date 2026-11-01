@@ -99,8 +99,12 @@ def estimate_skew(ink: np.ndarray) -> float | None:
     return median if agree >= 0.5 else None
 
 
-def preprocess(image: np.ndarray) -> Preprocessed:
-    """Grayscale, downscale, binarize (Otsu), fix polarity, deskew, and reject images with no plan."""
+def preprocess(image: np.ndarray, upscale: float = 1.0) -> Preprocessed:
+    """Grayscale, downscale, binarize (Otsu), fix polarity, deskew, and reject images with no plan.
+
+    `upscale` > 1 enlarges a small image first (see `resolution.py`), so walls only 2-3 px thick
+    in the upload become thick enough to tell apart from annotation lines. The working image
+    never exceeds MAX_WORKING_SIDE."""
     if image.ndim == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     h, w = image.shape
@@ -111,7 +115,13 @@ def preprocess(image: np.ndarray) -> Preprocessed:
         )
 
     factor = max(1.0, max(h, w) / MAX_WORKING_SIDE)
-    gray = image if factor == 1.0 else cv2.resize(image, (round(w / factor), round(h / factor)), interpolation=cv2.INTER_AREA)
+    if upscale > 1.0 and factor == 1.0:
+        upscale = min(upscale, MAX_WORKING_SIDE / max(h, w))
+        size = (round(w * upscale), round(h * upscale))
+        gray = cv2.resize(image, size, interpolation=cv2.INTER_CUBIC)
+        factor = w / size[0]  # < 1: one working pixel is a fraction of an uploaded pixel
+    else:
+        gray = image if factor == 1.0 else cv2.resize(image, (round(w / factor), round(h / factor)), interpolation=cv2.INTER_AREA)
     if float(gray.std()) < 2.0:
         raise Unsupported("The image is blank: no drawing was found.")
 

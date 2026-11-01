@@ -23,6 +23,8 @@ export interface SiteFade {
     siteBottom: { value: THREE.Vector3 };
   };
   apply: (material: THREE.Material) => void;
+  /** First person: fade into one haze colour (the sky's horizon); null restores the backdrop gradient. */
+  setHaze: (hex: string | null) => void;
 }
 
 export function createSiteFade(): SiteFade {
@@ -74,5 +76,13 @@ uniform vec3 siteBottom;`,
     // One shader variant per base material type, shared by every surroundings material.
     material.customProgramCacheKey = () => "archflow-site-fade";
   };
-  return { uniforms, apply };
+  const setHaze = (hex: string | null) => {
+    const top = hex ? srgb(hex) : srgb(BACKDROP.top);
+    const mid = hex ? srgb(hex) : srgb(BACKDROP.mid);
+    const bottom = hex ? srgb(hex) : srgb(BACKDROP.bottom);
+    uniforms.siteTop.value.copy(top);
+    uniforms.siteMid.value.copy(mid);
+    uniforms.siteBottom.value.copy(bottom);
+  };
+  return { uniforms, apply, setHaze };
 }

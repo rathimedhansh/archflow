@@ -89,6 +89,12 @@ export const VRIcon = (p: Props) => (
     <circle cx="16" cy="11.5" r="1.4" />
   </Svg>
 );
+export const WalkIcon = (p: Props) => (
+  <Svg {...p}>
+    <circle cx="13" cy="4.5" r="1.8" />
+    <path d="M10.5 21l2-6 3 3v3M12.5 15l-1-5.5 4 1.5 2 3M11.5 9.5L8 11l-1 3.5" />
+  </Svg>
+);
 export const InfoIcon = (p: Props) => (
   <Svg {...p}>
     <circle cx="12" cy="12" r="9" />

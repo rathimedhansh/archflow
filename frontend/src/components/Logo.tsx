@@ -1,14 +1,26 @@
-/** ARCHFLOW mark (a plan corner: walls, a door swing, one interior wall) and serif wordmark. */
-export default function Logo({ compact = false }: { compact?: boolean }) {
+import Image from "next/image";
+
+/**
+ * The official ARCHFLOW logo, shown directly on the header background (no plate, by the user's choice).
+ *
+ * Asset: /archflow-logo-trimmed.png is the original /archflow-logo.png.png with only its fully transparent
+ * border removed (1115×226, every remaining pixel identical; the original file is untouched). Served
+ * unoptimized so it is never re-encoded, scaled by height with width auto (aspect ratio kept, object-fit: contain).
+ * Height 24px on phones (~118px wide), 32px from sm up (~158px wide).
+ */
+export default function Logo() {
   return (
-    <span className="inline-flex items-center gap-2.5 text-foreground">
-      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden className="shrink-0">
-        <rect x="1" y="1" width="24" height="24" rx="5" fill="var(--accent)" />
-        <path d="M11 6.5H6.5v13h13v-13H15" stroke="var(--on-accent)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M15 6.5a4 4 0 0 1-4 4" stroke="var(--sage)" strokeWidth="1.3" strokeLinecap="round" />
-        <path d="M13 12.5v7" stroke="var(--on-accent)" strokeWidth="1.6" strokeLinecap="round" />
-      </svg>
-      {!compact && <span className="font-display text-[1.35rem] font-medium leading-none tracking-[-0.01em]">Archflow</span>}
+    <span className="inline-flex shrink-0 items-center justify-center">
+      <Image
+        src="/archflow-logo-trimmed.png"
+        alt="ARCHFLOW"
+        width={1115}
+        height={226}
+        unoptimized
+        preload
+        draggable={false}
+        className="block h-6 w-auto max-w-none select-none object-contain sm:h-8"
+      />
     </span>
   );
 }

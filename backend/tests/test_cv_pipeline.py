@@ -122,8 +122,13 @@ def test_photo_like_image_is_rejected():
     _rejected(run(rng.integers(0, 256, (600, 800), dtype=np.uint8)), "Too much of the image is dark")
 
 
-def test_hollow_walls_are_rejected_with_a_reason():
-    _rejected(run(generate(2, Style(wall_style="hollow")).image), "solid, thick lines")
+def test_hollow_walls_are_read_with_reduced_confidence():
+    # Since opencv-2 double-line walls are reconstructed (tests/test_cv_hollow.py), never with high confidence.
+    result = run(generate(2, Style(wall_style="hollow")).image)
+    assert result.report.supported
+    assert_valid(result.plan)
+    assert result.report.overall_confidence <= 0.75
+    assert any("double outlines" in w for w in result.report.warnings)
 
 
 def test_thin_lines_only_is_rejected():
@@ -162,10 +167,10 @@ def test_a_crashing_stage_degrades_to_an_explained_empty_result(monkeypatch):
     def boom(*_args, **_kwargs):
         raise RuntimeError("bug in a stage")
 
-    monkeypatch.setattr(pipeline, "detect_rooms", boom)
+    monkeypatch.setattr(pipeline, "detect_openings", boom)
     result = run(generate(3, Style()).image)
     _rejected(result, "could not process")
-    assert [s.name for s in result.report.stages] == ["preprocess", "walls"]  # the stages that did run
+    assert [s.name for s in result.report.stages] == ["preprocess", "walls", "rooms"]  # the stages that did run
 
 
 # ---- stages, events, determinism -------------------------------------------------------------

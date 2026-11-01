@@ -9,20 +9,29 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { Scene3D, SceneBounds, V3 } from "@/lib/geometry3d";
 import type { EnvironmentSetting, Rect } from "@/lib/viewer/environment";
 import type { Layers } from "@/lib/viewer/layers";
+import { HAZE } from "@/lib/viewer/firstPerson";
 import CameraRig, { type CameraApi } from "./CameraRig";
+import FirstPersonSky from "./FirstPersonSky";
 import OutdoorEnvironment from "./environment/OutdoorEnvironment";
 import { computeFraming, FOV_DEG, viewPose } from "./framing";
 import PropertyScene from "./PropertyScene";
 import RoomLabels from "./RoomLabels";
 import VRSession, { type VRApi, type VREvent } from "./vr/VRSession";
+import WalkSession, { type WalkApi, type WalkEvent } from "./walk/WalkSession";
 
 /** Daylight sky inside the headset: a walk-through should feel like a visit, not a night scene. */
 const VR_SKY = "#c7d6e6";
+/**
+ * First person under ceilings: a soft interior fill, split between an even warm ambient and a
+ * sky/floor hemisphere (upward faces a little cooler from the windows' sky, downward faces such as
+ * the ceiling warmer, as if lit by light bounced off the floor), so rooms keep some depth.
+ */
+const FIRST_PERSON_FILL = { ambient: 0.3, hemisphere: 0.4 };
 
 /** The canvas renders on demand: draw one frame whenever what is visible changes. */
-function Redraw({ layers, selectedRoomId, environment }: { layers: Layers; selectedRoomId: string | null; environment: EnvironmentSetting }) {
+function Redraw({ layers, selectedRoomId, environment, ceilings }: { layers: Layers; selectedRoomId: string | null; environment: EnvironmentSetting; ceilings: boolean }) {
   const invalidate = useThree((s) => s.invalidate);
-  useEffect(() => invalidate(), [invalidate, layers, selectedRoomId, environment]);
+  useEffect(() => invalidate(), [invalidate, layers, selectedRoomId, environment, ceilings]);
   return null;
 }
 
@@ -49,11 +58,38 @@ function baseGeometry(bounds: SceneBounds) {
  * the lawn catches the house shadow instead of the plain shadow plane.
  */
 function Studio({ bounds, outdoor }: { bounds: SceneBounds; outdoor: boolean }) {
+  const backdrop = useMemo(() => createBackdropTexture(), []);
+  useEffect(() => () => backdrop?.dispose(), [backdrop]);
+  const base = useMemo(() => baseGeometry(bounds), [bounds]);
+  const groundSize = Math.max(base.size[0], base.size[2]) * 8;
+
+  return (
+    <>
+      {backdrop && <primitive attach="background" object={backdrop} />}
+      <RoundedBox name="studio-base" args={base.size} radius={0.06} smoothness={3} position={base.center} receiveShadow castShadow>
+        <meshStandardMaterial color="#d9d4cc" roughness={0.85} metalness={0} />
+      </RoundedBox>
+      {!outdoor && (
+        <mesh name="studio-ground" rotation={[-Math.PI / 2, 0, 0]} position={[base.center[0], base.groundY, base.center[2]]} receiveShadow>
+          <planeGeometry args={[groundSize, groundSize]} />
+          {/* No depth write: the 1 m grid lies 2 mm above and must never lose the depth test to it. */}
+          <shadowMaterial transparent opacity={0.16} depthWrite={false} />
+        </mesh>
+      )}
+    </>
+  );
+}
+
+/**
+ * Light shared by every mode, so orbit, walk-through and VR read as the same building: image-based
+ * fill generated locally from three.js's RoomEnvironment (no files, no network) and a soft sky/ground
+ * hemisphere. In first person (walk-through and VR, under ceilings) a warm interior fill is added.
+ * Always mounted; only intensities change, so switching modes never recompiles shaders.
+ */
+function SceneLighting({ firstPerson }: { firstPerson: boolean }) {
   const gl = useThree((s) => s.gl);
   const get = useThree((s) => s.get);
   const invalidate = useThree((s) => s.invalidate);
-  const backdrop = useMemo(() => createBackdropTexture(), []);
-  useEffect(() => () => backdrop?.dispose(), [backdrop]);
   const environment = useMemo(() => {
     const pmrem = new PMREMGenerator(gl);
     const room = new RoomEnvironment();
@@ -71,24 +107,12 @@ function Studio({ bounds, outdoor }: { bounds: SceneBounds; outdoor: boolean }) 
       scene.environmentIntensity = 1;
     };
   }, [get, invalidate]);
-  const base = useMemo(() => baseGeometry(bounds), [bounds]);
-  const groundSize = Math.max(base.size[0], base.size[2]) * 8;
-
   return (
     <>
-      {backdrop && <primitive attach="background" object={backdrop} />}
       <primitive attach="environment" object={environment} />
       <hemisphereLight args={["#ffffff", "#cfc7ba", 0.45]} />
-      <RoundedBox name="studio-base" args={base.size} radius={0.06} smoothness={3} position={base.center} receiveShadow castShadow>
-        <meshStandardMaterial color="#d9d4cc" roughness={0.85} metalness={0} />
-      </RoundedBox>
-      {!outdoor && (
-        <mesh name="studio-ground" rotation={[-Math.PI / 2, 0, 0]} position={[base.center[0], base.groundY, base.center[2]]} receiveShadow>
-          <planeGeometry args={[groundSize, groundSize]} />
-          {/* No depth write: the 1 m grid lies 2 mm above and must never lose the depth test to it. */}
-          <shadowMaterial transparent opacity={0.16} depthWrite={false} />
-        </mesh>
-      )}
+      <ambientLight intensity={firstPerson ? FIRST_PERSON_FILL.ambient : 0} color="#fff6ea" />
+      <hemisphereLight args={["#e3ecf6", "#d9cdb9", firstPerson ? FIRST_PERSON_FILL.hemisphere : 0]} />
     </>
   );
 }
@@ -106,7 +130,14 @@ function VRShadowRefresh({ vr }: { vr: boolean }) {
 }
 
 /** Key light with a shadow frustum sized to the model, aimed at its centre. */
-function Sun({ center, radius, intensity = 2.2, color = "#ffffff" }: { center: V3; radius: number; intensity?: number; color?: string }) {
+/**
+ * Shadow depth bias. The orbit view keeps its tuned value. Under ceilings (first person) that value,
+ * about 2 cm in this shadow camera's depth range, lets light leak onto the top of sunlit walls where
+ * they meet the ceiling, so a much smaller one is used there (normalBias still prevents acne).
+ */
+const SHADOW_BIAS = { orbit: -0.0004, firstPerson: -0.00005 };
+
+function Sun({ center, radius, intensity = 2.2, color = "#ffffff", bias = SHADOW_BIAS.orbit }: { center: V3; radius: number; intensity?: number; color?: string; bias?: number }) {
   const ref = useRef<DirectionalLight>(null);
   useEffect(() => {
     const light = ref.current;
@@ -129,7 +160,7 @@ function Sun({ center, radius, intensity = 2.2, color = "#ffffff" }: { center: V
       shadow-camera-bottom={-r}
       shadow-camera-near={0.1}
       shadow-camera-far={radius * 8}
-      shadow-bias={-0.0004}
+      shadow-bias={bias}
       shadow-normalBias={0.03}
     />
   );
@@ -145,6 +176,11 @@ interface Props {
   /** Optional VR (WebXR) presentation of this same scene. */
   vrRef?: Ref<VRApi>;
   onVREvent?: (e: VREvent) => void;
+  /** Optional desktop first-person walk-through of this same scene. */
+  walkRef?: Ref<WalkApi>;
+  onWalkEvent?: (e: WalkEvent) => void;
+  /** Ceilings in the walk-through (VR always shows them; the orbit view never does: it is a cutaway). */
+  ceilings?: boolean;
   /** Shown on the VR welcome panel. */
   title?: string;
   /** Play the short opening camera move once when the model first appears. */
@@ -157,7 +193,7 @@ interface Props {
  * The WebGL canvas. Renders on demand only (nothing is drawn while the view is still), so an
  * idle viewer costs no GPU time. Memoised: UI state outside the canvas never re-renders it.
  */
-function Viewer3D({ scene, fingerprint, layers, selectedRoomId, cameraRef, vrRef, onVREvent, title, reveal = false, environment = "off" }: Props) {
+function Viewer3D({ scene, fingerprint, layers, selectedRoomId, cameraRef, vrRef, onVREvent, walkRef, onWalkEvent, ceilings = true, title, reveal = false, environment = "off" }: Props) {
   const [ready, setReady] = useState(false);
   const [vr, setVr] = useState(false);
   const handleVREvent = useCallback((e: VREvent) => {
@@ -165,6 +201,12 @@ function Viewer3D({ scene, fingerprint, layers, selectedRoomId, cameraRef, vrRef
     if (e.type === "ended") setVr(false);
     onVREvent?.(e);
   }, [onVREvent]);
+  const [walking, setWalking] = useState(false);
+  const handleWalkEvent = useCallback((e: WalkEvent) => {
+    if (e.type === "started") setWalking(true);
+    if (e.type === "ended" || e.type === "failed") setWalking(false);
+    onWalkEvent?.(e);
+  }, [onWalkEvent]);
   const [contextLost, setContextLost] = useState(false);
   const framing = useMemo(() => computeFraming(scene.bounds), [scene.bounds]);
   // Only the first frame uses this; CameraRig owns the camera afterwards.
@@ -175,6 +217,7 @@ function Viewer3D({ scene, fingerprint, layers, selectedRoomId, cameraRef, vrRef
     x1: base.center[0] + base.size[0] / 2, z1: base.center[2] + base.size[2] / 2,
   }), [base]);
   const outdoor = environment !== "off";
+  const showCeilings = vr || (walking && ceilings);
 
   return (
     <div
@@ -183,6 +226,8 @@ function Viewer3D({ scene, fingerprint, layers, selectedRoomId, cameraRef, vrRef
       data-fingerprint={fingerprint}
       data-environment={environment}
       data-vr={vr ? "active" : undefined}
+      data-walk={walking ? "active" : undefined}
+      data-ceilings={showCeilings ? "on" : "off"}
       className="relative h-full w-full"
     >
       <Canvas
@@ -202,25 +247,20 @@ function Viewer3D({ scene, fingerprint, layers, selectedRoomId, cameraRef, vrRef
           setReady(true);
         }}
       >
-        {vr ? (
-          <>
-            <color attach="background" args={[VR_SKY]} />
-            <hemisphereLight args={["#dfe9ff", "#3a3226", 0.9]} />
-            {/* Inside the rooms (VR) walls facing away from the sun would read almost black: soft fill. */}
-            <ambientLight intensity={0.45} color="#fff6ea" />
-          </>
-        ) : (
-          <Studio bounds={scene.bounds} outdoor={outdoor} />
-        )}
+        {vr ? <color attach="background" args={[VR_SKY]} /> : <Studio bounds={scene.bounds} outdoor={outdoor} />}
+        <SceneLighting firstPerson={walking || vr} />
         {/* Hidden (not unmounted) in VR, which keeps its own ground: nothing to rebuild on the way back. */}
-        {outdoor && <OutdoorEnvironment scene={scene} style={environment} footprint={footprint} groundY={base.groundY} visible={!vr} />}
+        {outdoor && <OutdoorEnvironment scene={scene} style={environment} footprint={footprint} groundY={base.groundY} visible={!vr} haze={walking ? HAZE : null} />}
+        {/* First person only: a daylight sky in place of the studio backdrop (also in VR). */}
+        <FirstPersonSky center={framing.center} radius={framing.far * 0.8} visible={walking || vr} />
         {/* One light for both looks (VR draws its static shadow map from it once per session). */}
-        <Sun center={framing.center} radius={framing.radius} intensity={vr ? 2.2 : 2.1} color={vr ? "#ffffff" : "#fff5e8"} />
+        <Sun center={framing.center} radius={framing.radius} intensity={vr ? 2.2 : 2.1} color={vr ? "#ffffff" : "#fff5e8"} bias={walking || vr ? SHADOW_BIAS.firstPerson : SHADOW_BIAS.orbit} />
         <VRShadowRefresh vr={vr} />
 
-        <PropertyScene scene={scene} layers={layers} selectedRoomId={selectedRoomId} vr={vr} />
-        {/* Screen-space HTML labels do not exist in a headset; VRSession draws in-scene ones instead. */}
-        {layers.labels && !vr && (
+        <PropertyScene scene={scene} layers={layers} selectedRoomId={selectedRoomId} vr={vr} openDoors={walking} showCeilings={showCeilings} />
+        {/* Screen-space HTML labels do not exist in a headset; VRSession draws in-scene ones instead.
+            At eye level they would float through walls, so the walk-through shows the current room instead. */}
+        {layers.labels && !vr && !walking && (
           <RoomLabels spaces={scene.spaces} selectedRoomId={selectedRoomId} calibrated={scene.scale.calibrated} />
         )}
 
@@ -241,9 +281,11 @@ function Viewer3D({ scene, fingerprint, layers, selectedRoomId, cameraRef, vrRef
           infiniteGrid
         />
 
-        <CameraRig bounds={scene.bounds} apiRef={cameraRef} enabled={!vr} reveal={reveal} />
+        <CameraRig bounds={scene.bounds} apiRef={cameraRef} enabled={!vr && !walking} reveal={reveal} />
         {vrRef && <VRSession scene={scene} apiRef={vrRef} showLabels={layers.labels} title={title} onEvent={handleVREvent} />}
-        <Redraw layers={layers} selectedRoomId={selectedRoomId} environment={environment} />
+        {/* After CameraRig: its frame callback runs first, so the walker always has the last word on the camera. */}
+        {walkRef && <WalkSession scene={scene} apiRef={walkRef} onEvent={handleWalkEvent} />}
+        <Redraw layers={layers} selectedRoomId={selectedRoomId} environment={environment} ceilings={showCeilings} />
       </Canvas>
 
       {contextLost && (

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { editorReducer, initialEditorState } from "../floorplan/history";
 import type { FloorPlanData } from "../floorplan/types";
 import { validateFloorPlan } from "../floorplan/validate";
-import { acceptInterpretation, confidenceBand, parseReport, reviewItems } from "./result";
+import { acceptInterpretation, confidenceBand, parseReport, resultOutcome, reviewItems } from "./result";
 import { buildSteps } from "./steps";
 import { applyStage, initialProgress, parseStreamLine, readLines } from "./stream";
 
@@ -155,6 +155,15 @@ describe("review list", () => {
 
   it("bands confidence for display", () => {
     expect([confidenceBand(0.9), confidenceBand(0.7), confidenceBand(0.3)]).toEqual(["high", "medium", "low"]);
+  });
+
+  it("never presents a weak result like a good one", () => {
+    const outcome = (p: FloorPlanData, r: Record<string, unknown>) => resultOutcome({ plan: p, report: parseReport(report(r)) });
+    expect(outcome(plan(), {})).toBe("found");
+    expect(outcome(plan({ rooms: [] }), {})).toBe("partial"); // walls without any closed room: not a usable plan
+    expect(outcome(plan({ rooms: [] }), { overall_confidence: 0.3 })).toBe("partial");
+    expect(outcome(plan(), { overall_confidence: 0.45 })).toBe("uncertain");
+    expect(outcome(plan({ walls: [], rooms: [], doors: [] }), { supported: false, reason: "too small" })).toBe("unsupported");
   });
 });
 

@@ -17,6 +17,7 @@ from app.interpretation.opencv.types import OpeningDetection, Preprocessed, Scal
 STANDARD_DOOR_WIDTH_M = 0.85
 ASSUMED_IMAGE_WIDTH_M = 12.0  # same fallback as the manual interpreter
 PLAUSIBLE_WALL_M = (0.05, 0.8)
+PLAUSIBLE_WALL_ONE_DOOR_M = (0.08, 0.5)  # the drawing's dominant walls; real partitions are at least ~8 cm
 
 
 def estimate_scale(pre: Preprocessed, openings: OpeningDetection, wall_thickness_px: float, image_width_px: int) -> ScaleEstimate:
@@ -33,7 +34,10 @@ def estimate_scale(pre: Preprocessed, openings: OpeningDetection, wall_thickness
     median = statistics.median(widths)
     mpp = STANDARD_DOOR_WIDTH_M / median
     wall_m = wall_thickness_px * pre.factor * mpp
-    if not (PLAUSIBLE_WALL_M[0] <= wall_m <= PLAUSIBLE_WALL_M[1]):
+    # One door is weak evidence (it may itself be a false detection), so it must agree with a normal wall
+    # thickness more closely than several doors that agree with each other.
+    low, high = PLAUSIBLE_WALL_ONE_DOOR_M if len(widths) == 1 else PLAUSIBLE_WALL_M
+    if not (low <= wall_m <= high):
         return ScaleEstimate(
             meters_per_pixel=assumed.meters_per_pixel, source="assumed", confidence=0.1,
             detail=(

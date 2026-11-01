@@ -88,6 +88,20 @@ export function elementCounts(plan: FloorPlanData) {
 export type ConfidenceBand = "high" | "medium" | "low";
 export const confidenceBand = (c: number): ConfidenceBand => (c >= 0.85 ? "high" : c >= 0.6 ? "medium" : "low");
 
+export type ResultOutcome = "found" | "partial" | "uncertain" | "unsupported";
+
+/**
+ * How to present an automatic result, so a weak one is never announced like a good one:
+ * "partial" when walls were found but no closed room (the plan cannot be used as it is),
+ * "uncertain" when the detector's own score is low.
+ */
+export function resultOutcome(interpretation: Interpretation): ResultOutcome {
+  const { plan, report } = interpretation;
+  if (!report.supported) return "unsupported";
+  if (plan.rooms.length === 0) return "partial";
+  return confidenceBand(report.overall_confidence) === "low" ? "uncertain" : "found";
+}
+
 export interface ReviewItem extends Selection {
   confidence: number;
   evidence: string;

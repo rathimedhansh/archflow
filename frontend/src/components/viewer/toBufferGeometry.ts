@@ -50,6 +50,14 @@ export function wallCapColors(mesh: MeshData, side: RGB, cap: RGB): Float32Array
   return colors;
 }
 
+/** The wall's top height (its highest vertex) repeated for every vertex. New array. */
+export function wallTopAttribute(mesh: MeshData): Float32Array {
+  const { positions } = mesh;
+  let top = -Infinity;
+  for (let v = 1; v < positions.length; v += 3) top = Math.max(top, positions[v]);
+  return new Float32Array(positions.length / 3).fill(Number.isFinite(top) ? top : 0);
+}
+
 const toRGB = (hex: string): RGB => {
   const c = new THREE.Color(hex); // sRGB hex -> linear working space
   return [c.r, c.g, c.b];
@@ -67,6 +75,8 @@ export function toDisplayGeometry(object: SceneObject): THREE.BufferGeometry {
     geometry.setAttribute("uv", new THREE.BufferAttribute(planarUVs(object.mesh.positions), 2));
   } else if (object.kind === "wall") {
     geometry.setAttribute("color", new THREE.BufferAttribute(wallCapColors(object.mesh, toRGB(WALL_SIDE_COLOR), toRGB(WALL_CAP_COLOR)), 3));
+    // First-person contact shading needs the wall's top on every vertex (unused by the orbit material).
+    geometry.setAttribute("wallTop", new THREE.BufferAttribute(wallTopAttribute(object.mesh), 1));
   }
   return geometry;
 }

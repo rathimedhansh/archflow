@@ -148,18 +148,26 @@ export function nearestWall(plan: FloorPlanData, p: Point, maxDistance: number) 
   return best;
 }
 
+/** Schema limits for a wall's thickness (metres): greater than 0, at most 2. */
+const MIN_THICKNESS = 0.01;
+const MAX_THICKNESS = 2;
+
 /**
  * Set the real-world scale. Geometry is re-scaled so everything stays exactly where it
- * sits on the image; only its metric meaning changes. Wall/door heights and thicknesses
- * are real-world values the user chose, so they are left alone.
+ * sits on the image; only its metric meaning changes. Heights are never drawn on a plan,
+ * so they are left alone. Wall thickness depends on where it came from: automatic
+ * detection ("opencv", "ai") measured it on the image with the old scale, so it is
+ * re-scaled with everything else; in a hand-traced plan it is a typed-in real value.
  */
 export function applyScale(plan: FloorPlanData, metersPerPixel: number): FloorPlanData {
   const k = metersPerPixel / plan.scale.meters_per_pixel;
   const s = (p: Point): Point => [p[0] * k, p[1] * k];
+  const measured = plan.provenance !== "manual";
+  const thickness = (t: number) => (measured ? clamp(t * k, MIN_THICKNESS, MAX_THICKNESS) : t);
   return {
     ...plan,
     scale: { meters_per_pixel: metersPerPixel, calibrated: true },
-    walls: plan.walls.map((w) => ({ ...w, start: s(w.start), end: s(w.end) })),
+    walls: plan.walls.map((w) => ({ ...w, start: s(w.start), end: s(w.end), thickness: thickness(w.thickness) })),
     rooms: plan.rooms.map((r) => ({ ...r, polygon: r.polygon.map(s) })),
     doors: plan.doors.map((d) => ({ ...d, offset: d.offset * k, width: d.width * k })),
     windows: plan.windows.map((w) => ({ ...w, offset: w.offset * k, width: w.width * k })),

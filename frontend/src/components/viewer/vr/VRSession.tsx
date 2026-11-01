@@ -4,12 +4,13 @@ import { createPortal, useFrame, useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from "react";
 import * as THREE from "three";
 import type { Scene3D } from "@/lib/geometry3d";
-import { buildColliders, resolveMove, type P2 } from "@/lib/vr/collision";
+import type { P2 } from "@/lib/vr/collision";
 import {
-  forwardOf, nextStopIndex, placeRig, rayToFloor, roomAt, roomCaption, roomStops, rotateY, SNAP_ANGLE, snapTurn, startStop,
-  stickToMove, teleportAllowed, yawOf, type RigPose, type RoomStop,
+  forwardOf, nextStopIndex, placeRig, rayToFloor, roomAt, roomCaption, roomStops, rotateY, SNAP_ANGLE, snapTurn,
+  stickToMove, teleportAllowed, yawOf, type RigPose,
 } from "@/lib/vr/navigation";
-import { describeVRError } from "@/lib/vr/support";
+import { describeVRError, VR_NO_START } from "@/lib/vr/support";
+import { navigationFor, safeSpawn, walkStep } from "@/lib/vr/walkable";
 import VRHud, { WELCOME_LINES } from "./VRHud";
 import VRRoomLabels from "./VRRoomLabels";
 
@@ -68,12 +69,11 @@ export default function VRSession({ scene, apiRef, showLabels, title, onEvent }:
   const [active, setActive] = useState(false);
   const activeRef = useRef(false);
 
-  const segs = useMemo(() => buildColliders(scene), [scene]);
-  const stops = useMemo(() => roomStops(scene.spaces, segs), [scene.spaces, segs]);
-  const start = useMemo<RoomStop>(() => {
-    const { min, max } = scene.bounds;
-    return startStop(scene.spaces, segs, [(min[0] + max[0]) / 2, (min[2] + max[2]) / 2]);
-  }, [scene, segs]);
+  // Shared with the desktop walk-through: one collision model and one walking rule.
+  const nav = useMemo(() => navigationFor(scene), [scene]);
+  const stops = useMemo(() => roomStops(scene.spaces, nav.walls), [scene.spaces, nav]);
+  // Validated: inside a room and clear of walls (null when the model has no safe place).
+  const start = useMemo(() => safeSpawn(nav), [nav]);
 
   const rigGroup = useRef<THREE.Group>(null);
   const rig = useRef<RigPose>({ position: [0, 0], yaw: 0 });
@@ -198,6 +198,10 @@ export default function VRSession({ scene, apiRef, showLabels, title, onEvent }:
       return;
     }
     if (session.current) return;
+    if (!start) {
+      onEventRef.current({ type: "failed", message: VR_NO_START });
+      return;
+    }
     // Called synchronously from the click, so the browser sees the user's gesture.
     xr.requestSession("immersive-vr", { optionalFeatures: ["local-floor", "bounded-floor"] }).then(
       async (s) => {
@@ -222,7 +226,7 @@ export default function VRSession({ scene, apiRef, showLabels, title, onEvent }:
       },
       (e) => onEventRef.current({ type: "failed", message: describeVRError(e) }),
     );
-  }, [get]);
+  }, [get, start]);
 
   const exit = useCallback(() => {
     void session.current?.end().catch(() => {});
@@ -251,7 +255,7 @@ export default function VRSession({ scene, apiRef, showLabels, title, onEvent }:
     };
     const headYaw = () => rig.current.yaw + headLocalYaw;
 
-    if (pendingStart.current) {
+    if (pendingStart.current && start) {
       rig.current = placeRig(headLocal, headLocalYaw, start.position, start.yaw);
       pendingStart.current = false;
     }
@@ -272,7 +276,11 @@ export default function VRSession({ scene, apiRef, showLabels, title, onEvent }:
     let anyPress = false;
     let gripsHeld = 0;
     const seen = new Set<"left" | "right">();
-    for (const src of frame.session.inputSources) {
+    // While the browser or system shows something over the scene (or the session is hidden),
+    // controller input belongs to that: no walking, turning or teleporting meanwhile.
+    const vis = frame.session.visibilityState;
+    const inputAllowed = vis !== "visible-blurred" && vis !== "hidden";
+    for (const src of inputAllowed ? frame.session.inputSources : []) {
       const gp = src.gamepad;
       const hand: "left" | "right" = src.handedness === "right" ? "right" : "left";
       seen.add(hand);
@@ -306,7 +314,7 @@ export default function VRSession({ scene, apiRef, showLabels, title, onEvent }:
         const delta = stickToMove(stick, forwardOf(headYaw()), dt);
         if ((delta[0] !== 0 || delta[1] !== 0) && !fade.current) {
           const from = headWorld();
-          const to = resolveMove(from, delta, segs);
+          const to = walkStep(nav, from, delta);
           rig.current = { ...rig.current, position: [rig.current.position[0] + to[0] - from[0], rig.current.position[1] + to[1] - from[1]] };
         }
       } else {
@@ -330,7 +338,7 @@ export default function VRSession({ scene, apiRef, showLabels, title, onEvent }:
             [rig.current.position[0] + o[0], p.y + eyeOffset.current, rig.current.position[1] + o[1]],
             [d[0], tmpV.y, d[1]],
           );
-          if (hit && teleportAllowed(headWorld(), hit, scene.spaces, segs)) target = hit;
+          if (hit && teleportAllowed(headWorld(), hit, scene.spaces, nav.colliders)) target = hit;
           const line = aimLine.current;
           if (line) {
             // Drawn in play-space coordinates (child of the rig).

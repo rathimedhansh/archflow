@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { useVRSupport } from "@/hooks/useVRSupport";
 import { sceneFingerprint, type Scene3D, type SceneSpace, type SceneStats } from "@/lib/geometry3d";
@@ -9,13 +9,15 @@ import { DEFAULT_ENVIRONMENT, type EnvironmentSetting } from "@/lib/viewer/envir
 import { DEFAULT_LAYERS, type LayerKey, type Layers } from "@/lib/viewer/layers";
 import { initialTour, TOUR_INTERVAL_MS, tourReducer, tourStops, type TourAction, type TourState } from "@/lib/viewer/tour";
 import { initialVRStatus, supportMessage, VR_HOW_TO, vrReducer } from "@/lib/vr/support";
+import { canWalkOnDevice, initialWalkStatus, isWalkKey, POINTER_LOCK_FAILED, WALK_NEEDS_KEYBOARD, walkReducer } from "@/lib/walk/controls";
 import type { CameraApi } from "./CameraRig";
-import { CloseIcon, CollapseIcon, ExpandIcon, HelpIcon, InfoIcon, MinusIcon, PanelIcon, PlayIcon, PlusIcon, ResetIcon, TopViewIcon, VRIcon, WarningIcon } from "./icons";
+import { CloseIcon, CollapseIcon, ExpandIcon, HelpIcon, InfoIcon, MinusIcon, PanelIcon, PlayIcon, PlusIcon, ResetIcon, TopViewIcon, VRIcon, WalkIcon, WarningIcon } from "./icons";
 import { button } from "@/components/ui";
 import PresentationOverlay from "./PresentationOverlay";
 import PropertyPanel from "./PropertyPanel";
 import ViewerErrorBoundary from "./ViewerErrorBoundary";
 import type { VRApi, VREvent } from "./vr/VRSession";
+import type { WalkApi, WalkEvent } from "./walk/WalkSession";
 
 // WebGL only exists in the browser.
 const Viewer3D = dynamic(() => import("./Viewer3D"), {
@@ -73,6 +75,16 @@ function ToolButton({ id, label, shortcut, onClick, children, pressed, text = tr
   );
 }
 
+/** Keyboard + fine pointer present? Re-evaluated when a mouse or keyboard cover is attached or removed. */
+const WALK_QUERIES = ["(any-pointer: fine)", "(any-hover: hover)"];
+function subscribeWalkCapability(onChange: () => void) {
+  const lists = WALK_QUERIES.map((q) => window.matchMedia(q));
+  lists.forEach((l) => l.addEventListener("change", onChange));
+  return () => lists.forEach((l) => l.removeEventListener("change", onChange));
+}
+const walkCapableNow = () => canWalkOnDevice((q) => window.matchMedia(q).matches);
+const kbd = "rounded border border-border bg-stone px-1 font-mono text-[10px] text-foreground";
+
 const isTyping = (t: EventTarget | null) =>
   t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && (t as HTMLInputElement).type !== "checkbox");
 
@@ -124,6 +136,92 @@ export default function PropertyViewer({ planId, scene, stats, notes, audience =
     if (e.type === "failed") dispatchVR({ type: "failed", message: e.message });
     else dispatchVR({ type: e.type });
   }, []);
+
+  // ---- desktop walk-through: first person at eye level, same scene, same collision as VR ----
+  const walkRef = useRef<WalkApi>(null);
+  const [walk, dispatchWalk] = useReducer(walkReducer, initialWalkStatus);
+  const [walkCaption, setWalkCaption] = useState("");
+  const [walkHelpOpen, setWalkHelpOpen] = useState(true);
+  // First-run instruction inside the controls panel; gone after the first step or look.
+  const [walkIntro, setWalkIntro] = useState(false);
+  // Fullscreen requested from the walk-through is left again when the walk ends.
+  const walkFullscreen = useRef(false);
+  // Ceilings while walking (on by default; the orbit view is always a cutaway). Kept between walks.
+  const [ceilings, setCeilings] = useState(true);
+  const toggleCeilings = useCallback(() => setCeilings((c) => !c), []);
+  const { active: fsActive, enter: fsEnter, exit: fsExit } = fullscreen;
+  const toggleWalkFullscreen = useCallback(() => {
+    if (fsActive) {
+      walkFullscreen.current = false;
+      void fsExit();
+    } else {
+      walkFullscreen.current = true;
+      void fsEnter(); // from a click or key press: the browser requires a user action
+    }
+  }, [fsActive, fsEnter, fsExit]);
+  useEffect(() => {
+    if (walk.phase !== "active") return;
+    const shell = shellRef.current;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+      if (isWalkKey(e.code)) setWalkIntro(false);
+      if (e.code === "KeyC") {
+        e.preventDefault();
+        toggleCeilings();
+      } else if (e.code === "KeyF") {
+        e.preventDefault();
+        toggleWalkFullscreen();
+      }
+    };
+    const onPointer = (e: PointerEvent) => {
+      if (e.target instanceof HTMLCanvasElement) setWalkIntro(false); // started dragging the view
+    };
+    window.addEventListener("keydown", onKey);
+    shell?.addEventListener("pointerdown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      shell?.removeEventListener("pointerdown", onPointer);
+    };
+  }, [walk.phase, toggleCeilings, toggleWalkFullscreen]);
+  const walkCapable = useSyncExternalStore(subscribeWalkCapability, walkCapableNow, () => true);
+  const walking = walk.phase !== "idle";
+  const enterWalk = useCallback(() => {
+    if (!walkCapable) {
+      dispatchWalk({ type: "failed", message: WALK_NEEDS_KEYBOARD });
+      return;
+    }
+    setVrInfoOpen(false);
+    // The orbit pose restored afterwards must be the finished overview, never a mid-reveal frame.
+    camera.current?.finishReveal();
+    setWalkCaption("");
+    setWalkIntro(true);
+    dispatchWalk({ type: "request" });
+    walkRef.current?.enter();
+  }, [walkCapable]);
+  const exitWalk = useCallback(() => walkRef.current?.exit(), []);
+  const onWalkEvent = useCallback((e: WalkEvent) => {
+    if (e.type === "room") setWalkCaption(e.caption);
+    else if (e.type === "pointer") {
+      dispatchWalk({ type: "pointer", locked: e.locked });
+      if (e.locked) setWalkIntro(false);
+    }
+    else if (e.type === "pointer-error") dispatchWalk({ type: "notice", message: POINTER_LOCK_FAILED });
+    else if (e.type === "failed") dispatchWalk({ type: "failed", message: e.message });
+    else dispatchWalk({ type: e.type });
+  }, []);
+  // Focus follows the mode: onto Exit when walking starts, back onto Walk through afterwards.
+  const wasWalking = useRef(false);
+  useEffect(() => {
+    const shell = shellRef.current;
+    if (walk.phase === "active" && !wasWalking.current) shell?.querySelector<HTMLButtonElement>("[data-testid=walk-exit]")?.focus();
+    if (walk.phase === "idle" && wasWalking.current) {
+      shell?.querySelector<HTMLButtonElement>("#walk-toggle")?.focus();
+      // Back to the orbit view as it was: leave fullscreen if the walk-through asked for it.
+      if (walkFullscreen.current) void fsExit();
+      walkFullscreen.current = false;
+    }
+    wasWalking.current = walk.phase === "active";
+  }, [walk.phase, fsExit]);
 
   // ---- presentation mode: fullscreen, no panels, title card and a guided room tour ----
   const [presenting, setPresenting] = useState(startPresenting);
@@ -193,7 +291,8 @@ export default function PropertyViewer({ planId, scene, stats, notes, audience =
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // While a headset is on, the desktop camera is not in charge.
-      if (inVR || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+      // Walking has its own keys (WASD, arrows, Esc).
+      if (inVR || walking || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
       // Esc closes the "View in VR" panel first and returns focus to its button.
       if (vrInfoOpen && !presenting && e.key === "Escape") {
         e.preventDefault();
@@ -225,10 +324,10 @@ export default function PropertyViewer({ planId, scene, stats, notes, audience =
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [inVR, presenting, resetView, startPresentation, stopPresentation, toggleFullscreen, toggleLayer, topView, zoom, vrInfoOpen]);
+  }, [inVR, walking, presenting, resetView, startPresentation, stopPresentation, toggleFullscreen, toggleLayer, topView, zoom, vrInfoOpen]);
 
   const fs = fullscreen.active;
-  const showPanel = panelOpen && !presenting;
+  const showPanel = panelOpen && !presenting && !walking;
 
   return (
     <section
@@ -246,7 +345,7 @@ export default function PropertyViewer({ planId, scene, stats, notes, audience =
         <ViewerErrorBoundary>
           <Viewer3D
             scene={scene} fingerprint={fingerprint} layers={layers} selectedRoomId={highlightedRoomId} cameraRef={camera}
-            vrRef={vrRef} onVREvent={onVREvent} title={title}
+            vrRef={vrRef} onVREvent={onVREvent} walkRef={walkRef} onWalkEvent={onWalkEvent} ceilings={ceilings} title={title}
             // Opened straight into a presentation: the tour's first move is the entrance instead.
             reveal={!startPresenting}
             environment={environment}
@@ -265,7 +364,7 @@ export default function PropertyViewer({ planId, scene, stats, notes, audience =
         )}
 
         {/* Camera controls */}
-        {!presenting && <>
+        {!presenting && !walking && <>
         {/* Camera on the left, viewing modes on the right. Icon-only on phones, so both fit one row. */}
         <div className="absolute left-3 top-3 z-30 flex max-w-[calc(50%-1rem)] flex-wrap gap-2 sm:max-w-none" role="toolbar" aria-label="Camera">
           <ToolGroup label="Camera">
@@ -286,6 +385,16 @@ export default function PropertyViewer({ planId, scene, stats, notes, audience =
 
         <div className="absolute right-3 top-3 z-30 flex gap-2" role="toolbar" aria-label="View">
           <ToolGroup label="Viewing modes">
+            <ToolButton
+              id="walk-toggle"
+              label="Walk through"
+              title={walkCapable ? "Walk through at eye level (keyboard and mouse)" : "Walk through: needs a keyboard and a mouse or trackpad"}
+              onClick={enterWalk}
+              disabled={vrStatus.phase !== "idle"}
+              testId="walk-enter"
+            >
+              <WalkIcon />
+            </ToolButton>
             {vrSupport === "supported" ? (
               <ToolButton label={vrStatus.phase === "starting" ? "Starting VR…" : "Enter VR"} onClick={enterVR} disabled={vrStatus.phase !== "idle"} testId="vr-enter">
                 <VRIcon />
@@ -382,6 +491,8 @@ export default function PropertyViewer({ planId, scene, stats, notes, audience =
                 <dd>scroll · pinch · + / − buttons</dd>
                 <dt className="font-medium text-foreground">Move</dt>
                 <dd>right-drag · Shift+drag · two fingers</dd>
+                <dt className="font-medium text-foreground">Walk</dt>
+                <dd>Walk through, then W A S D</dd>
                 <dt className="font-medium text-foreground">Lost?</dt>
                 <dd>press Reset view (R)</dd>
                 {vrSupport === "supported" && (
@@ -405,6 +516,107 @@ export default function PropertyViewer({ planId, scene, stats, notes, audience =
           )}
         </div>
         </>}
+
+        {walk.error && !walking && (
+          <div role="alert" data-testid="walk-error" className="absolute left-1/2 top-16 z-40 flex w-[min(28rem,calc(100%-1.5rem))] -translate-x-1/2 items-start gap-2.5 rounded-lg border border-warning-line bg-warning-bg p-3 text-xs leading-relaxed text-warning shadow-soft">
+            <WarningIcon className="mt-0.5 h-4 w-4 shrink-0" />
+            <span className="flex-1">{walk.error}</span>
+            <button type="button" onClick={() => dispatchWalk({ type: "dismiss" })} aria-label="Dismiss" className="rounded p-0.5 hover:bg-warning-line/40">
+              <CloseIcon className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
+        {walk.phase === "starting" && (
+          <div role="status" data-testid="walk-preparing" className={`${glass} absolute left-1/2 top-1/2 z-40 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 !bg-surface px-3.5 py-2.5 text-xs shadow-lg`}>
+            <WalkIcon className="h-4 w-4 text-accent" /> Preparing walk-through…
+          </div>
+        )}
+
+        {walk.phase === "active" && (
+          <>
+            <div className="pointer-events-none absolute left-3 top-3 z-30 max-w-[calc(100%-13rem)]">
+              <span className={`${glass} inline-flex h-9 max-w-full items-center gap-2 px-3 text-xs`} data-testid="walk-room" aria-live="polite">
+                <WalkIcon className="h-3.5 w-3.5 shrink-0 text-accent" />
+                <span className="truncate font-medium text-foreground">{walkCaption || "Walking"}</span>
+              </span>
+            </div>
+            <div className="absolute right-3 top-3 z-30 flex gap-2">
+              <button
+                type="button" onClick={toggleWalkFullscreen} data-testid="walk-fullscreen"
+                aria-label={fullscreen.active ? "Exit fullscreen (F)" : "Fullscreen (F)"} title={fullscreen.active ? "Exit fullscreen (F)" : "Fullscreen (F)"}
+                className={`${glass} inline-flex h-8 items-center gap-1.5 px-2.5 text-xs font-medium hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent`}
+              >
+                {fullscreen.active ? <CollapseIcon /> : <ExpandIcon />}
+                <span className="hidden sm:inline">{fullscreen.active ? "Exit fullscreen" : "Fullscreen"}</span>
+              </button>
+              <button type="button" onClick={exitWalk} data-testid="walk-exit" className={button("primary", "sm", "shadow-sm")}>
+                Exit walk-through <kbd className="ml-1 rounded border border-white/30 px-1 font-mono text-[10px]">Esc</kbd>
+              </button>
+            </div>
+            {walk.locked && (
+              <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 z-30 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_0_1.5px_rgba(34,38,31,0.55)]" />
+            )}
+            <div className="absolute bottom-3 left-3 z-30 max-w-[calc(100%-1.5rem)]">
+              {walkHelpOpen ? (
+                <div className={`${glass} w-72 max-w-full !bg-surface p-3 text-xs shadow-lg`} data-testid="walk-help" role="region" aria-label="Walking controls">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="font-semibold text-foreground">Walking controls</span>
+                    <button type="button" onClick={() => setWalkHelpOpen(false)} aria-label="Hide walking controls" className="rounded p-1 text-muted hover:bg-stone hover:text-foreground">
+                      <CloseIcon className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  {walkIntro && (
+                    <p className="mb-2 rounded-md bg-accent-soft px-2.5 py-2 text-[12px] leading-snug text-foreground" data-testid="walk-intro">
+                      You are standing inside the property. Press <kbd className={kbd}>W</kbd> to walk; drag the view to look around, or choose <span className="font-medium">Use mouse look</span> below.
+                    </p>
+                  )}
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-muted">
+                    <dt className="font-medium text-foreground">Move</dt>
+                    <dd><kbd className={kbd}>W</kbd> <kbd className={kbd}>A</kbd> <kbd className={kbd}>S</kbd> <kbd className={kbd}>D</kbd> or <kbd className={kbd}>↑</kbd> <kbd className={kbd}>↓</kbd></dd>
+                    <dt className="font-medium text-foreground">Turn</dt>
+                    <dd><kbd className={kbd}>←</kbd> <kbd className={kbd}>→</kbd> or <kbd className={kbd}>Q</kbd> <kbd className={kbd}>E</kbd></dd>
+                    <dt className="font-medium text-foreground">Look</dt>
+                    <dd>{walk.locked ? "move the mouse" : "drag the view"}</dd>
+                    <dt className="font-medium text-foreground">Faster</dt>
+                    <dd>hold <kbd className={kbd}>Shift</kbd></dd>
+                    <dt className="font-medium text-foreground">Fullscreen</dt>
+                    <dd><kbd className={kbd}>F</kbd> or the button at the top</dd>
+                    <dt className="font-medium text-foreground">Ceilings</dt>
+                    <dd>
+                      <button type="button" onClick={toggleCeilings} aria-pressed={ceilings} data-testid="walk-ceilings" className="rounded underline decoration-border-strong underline-offset-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent">
+                        {ceilings ? "shown" : "hidden"}
+                      </button>{" "}· <kbd className={kbd}>C</kbd>
+                    </dd>
+                    <dt className="font-medium text-foreground">Leave</dt>
+                    <dd>{walk.locked ? <><kbd className={kbd}>Esc</kbd> frees the mouse, then <kbd className={kbd}>Esc</kbd> again</> : <><kbd className={kbd}>Esc</kbd> or Exit walk-through</>}</dd>
+                  </dl>
+                  <div className="mt-2 border-t border-border pt-2">
+                    {walk.locked ? (
+                      <p className="text-[11px] text-muted" data-testid="walk-mouselook-on">Mouse look is on. Press <kbd className={kbd}>Esc</kbd> to get the pointer back.</p>
+                    ) : (
+                      <button type="button" onClick={() => walkRef.current?.lockPointer()} className={button("secondary", "sm", "w-full")} data-testid="walk-mouselook">
+                        Use mouse look
+                      </button>
+                    )}
+                    {walk.notice && <p className="mt-1.5 text-[11px] text-warning" role="status" data-testid="walk-notice">{walk.notice}</p>}
+                    {fullscreen.mode === "fallback" && (
+                      <p className="mt-1.5 text-[11px] text-muted" role="status" data-testid="walk-fullscreen-fallback">
+                        This browser did not allow fullscreen, so the view fills the window instead.
+                      </p>
+                    )}
+                  </div>
+                  <p className="mt-2 text-[11px] text-muted">Walls and windows stop you; open doorways let you through. Doors are shown see-through.</p>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setWalkHelpOpen(true)} className={`${chipBtn} text-muted`} aria-label="Show walking controls" aria-expanded={false} data-testid="walk-help-show">
+                  <HelpIcon className="h-3.5 w-3.5" />
+                  <span>Walking controls</span>
+                </button>
+              )}
+            </div>
+          </>
+        )}
 
         {inVR && (
           <div data-testid="vr-active" className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-background/80 p-6 text-center">

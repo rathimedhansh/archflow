@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Badge, button, Notice } from "@/components/ui";
 import { ArrowRightIcon } from "@/components/viewer/icons";
 import { absoluteUrl, type FloorPlan } from "@/lib/api";
-import { confidenceBand, elementCounts } from "@/lib/interpretation/result";
+import { confidenceBand, elementCounts, resultOutcome } from "@/lib/interpretation/result";
 import type { Interpretation } from "@/lib/interpretation/types";
 
 interface Props {
@@ -13,6 +13,15 @@ interface Props {
 
 const BAND_TEXT = { high: "High", medium: "Medium", low: "Low" } as const;
 const BAND_TONE = { high: "success", medium: "warning", low: "danger" } as const;
+const HEADLINE = {
+  found: "Here's what we found",
+  partial: "Partial result: walls only",
+  uncertain: "Uncertain result",
+} as const;
+const OUTCOME_NOTE = {
+  partial: "No closed rooms were found, so this is not a complete plan yet. Add or close the rooms in the editor before using it.",
+  uncertain: "The detector is unsure about much of this. Check every element against the drawing, or trace the plan by hand.",
+} as const;
 
 /** What automatic detection produced, before the user opens it in the editor. */
 export default function AutoResultSummary({ image, interpretation, onReset }: Props) {
@@ -20,10 +29,11 @@ export default function AutoResultSummary({ image, interpretation, onReset }: Pr
   const counts = elementCounts(plan);
   const review = report.elements.filter((e) => e.needs_review).length;
   const band = confidenceBand(report.overall_confidence);
+  const outcome = resultOutcome(interpretation);
   const edit = `/plans/${image.id}/edit`;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]" data-testid="auto-result">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]" data-testid="auto-result" data-outcome={outcome}>
       <div className="drafting-paper overflow-hidden rounded-xl border border-border">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={absoluteUrl(image.image_url)} alt={`Floor plan ${image.original_filename}`} width={image.width} height={image.height}
@@ -34,7 +44,7 @@ export default function AutoResultSummary({ image, interpretation, onReset }: Pr
         {report.supported ? (
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-display text-2xl font-medium">Here&apos;s what we found</h2>
+              <h2 className="font-display text-2xl font-medium">{HEADLINE[outcome as keyof typeof HEADLINE]}</h2>
               <Badge tone={BAND_TONE[band]} className="!font-normal">
                 <span title="Heuristic detector score, not a probability">{BAND_TEXT[band]} confidence · {Math.round(report.overall_confidence * 100)}%</span>
               </Badge>
@@ -47,6 +57,9 @@ export default function AutoResultSummary({ image, interpretation, onReset }: Pr
                 </div>
               ))}
             </dl>
+            {(outcome === "partial" || outcome === "uncertain") && (
+              <Notice tone="warning" className="mt-4" title={HEADLINE[outcome]}>{OUTCOME_NOTE[outcome]}</Notice>
+            )}
             <p className="mt-4 text-sm leading-relaxed text-muted">
               {review > 0 ? `${review} element${review > 1 ? "s" : ""} flagged for review. ` : "Nothing was flagged, but it's still worth checking against the drawing. "}
               {report.scale?.source === "doors" ? "The scale was estimated from door widths" : "The scale was assumed"}; you can set the real scale in the editor.

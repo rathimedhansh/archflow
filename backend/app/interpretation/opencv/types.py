@@ -95,6 +95,7 @@ class WallDetection:
     wall_mask: np.ndarray  # uint8, 255 = wall
     unexplained_ratio: float  # thick ink not explained by axis-aligned walls (diagonals, curves, blobs)
     warnings: tuple[str, ...] = ()
+    thin_px: int | None = None  # width of the annotation lines, None when there is no separate thin-line class
 
 
 @dataclass(frozen=True)

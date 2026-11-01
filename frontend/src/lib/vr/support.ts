@@ -45,6 +45,9 @@ export const VR_HOW_TO =
   "To walk through in VR, open this page in the browser of a standalone headset (e.g. Meta Quest Browser), " +
   "or in Chrome or Edge on a PC with a connected VR headset.";
 
+export const VR_NO_START =
+  "There is no safe place to start in this model (every candidate point is inside or against a wall), so VR was not started.";
+
 /** UI state of a VR visit, driven by the session's real events. */
 export type VRPhase = "idle" | "starting" | "active";
 export interface VRStatus {

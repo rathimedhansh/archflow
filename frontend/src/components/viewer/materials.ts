@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { MaterialKey } from "@/lib/geometry3d";
 import type { FloorFinish } from "@/lib/viewer/floorFinish";
+import { CONTACT_GLSL } from "@/lib/viewer/firstPerson";
 import { createFloorTexture } from "./proceduralTextures";
 
 /** All look-and-feel lives here; the geometry engine only names material slots. */
@@ -18,6 +19,10 @@ export interface SceneMaterials {
   floorSelectedStudio: THREE.Material;
   /** Desktop showroom: walls with a dark top cap (needs the `color` attribute of toDisplayGeometry). */
   wallCapped: THREE.Material;
+  /** First-person views (walk-through, VR): the capped wall plus contact shading at floor and ceiling. */
+  wallFirstPerson: THREE.Material;
+  /** First-person views: a matt, slightly warm white ceiling (faces down only). */
+  ceiling: THREE.Material;
   dispose: () => void;
 }
 
@@ -59,9 +64,31 @@ export function createMaterials(): SceneMaterials {
   }
   // White base: the vertex colours carry the wall colour (unchanged) and the dark cap.
   const wallCapped = std("#ffffff", { vertexColors: true });
+  // Same colours; darkens the wall towards the floor and the ceiling (needs the `wallTop` attribute).
+  const wallFirstPerson = std("#ffffff", { vertexColors: true });
+  wallFirstPerson.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", `#include <common>
+attribute float wallTop;
+varying float vContactY;
+varying float vContactTop;`)
+      .replace("#include <project_vertex>", `#include <project_vertex>
+  vContactY = ( modelMatrix * vec4( transformed, 1.0 ) ).y;
+  vContactTop = wallTop;`);
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", `#include <common>
+varying float vContactY;
+varying float vContactTop;${CONTACT_GLSL}`)
+      .replace("#include <color_fragment>", `#include <color_fragment>
+  diffuseColor.rgb *= archflowContact( vContactY, vContactTop );`);
+  };
+  wallFirstPerson.customProgramCacheKey = () => "archflow-wall-contact";
   const floorSelectedStudio = std("#9fdccf", { roughness: 0.7, emissive: "#14b8a6", emissiveIntensity: 0.35 });
+  // Faces down, so no sunlight reaches it: a little self-light stands in for light bounced off
+  // floor and walls (without it a ceiling reads grey). A single surface, so it casts shadows from both sides.
+  const ceiling = std("#f3f0ea", { roughness: 0.95, emissive: "#f3f0ea", emissiveIntensity: 0.1, shadowSide: THREE.DoubleSide });
 
-  const all = [...Object.values(byKey), ...floors, floorSelected, doorOpen, ...Object.values(finishes).flat(), wallCapped, floorSelectedStudio];
+  const all = [...Object.values(byKey), ...floors, floorSelected, doorOpen, ...Object.values(finishes).flat(), wallCapped, wallFirstPerson, floorSelectedStudio, ceiling];
   return {
     byKey,
     floors,
@@ -70,6 +97,8 @@ export function createMaterials(): SceneMaterials {
     finishes,
     floorSelectedStudio,
     wallCapped,
+    wallFirstPerson,
+    ceiling,
     dispose: () => {
       all.forEach((m) => m.dispose());
       textures.forEach((t) => t.dispose());

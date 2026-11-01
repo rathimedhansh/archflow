@@ -19,14 +19,13 @@ import numpy as np
 from app.interpretation.opencv.assemble import assemble
 from app.interpretation.opencv.openings import detect_openings
 from app.interpretation.opencv.preprocess import load_image, preprocess
-from app.interpretation.opencv.rooms import detect_rooms
+from app.interpretation.opencv.resolution import read_walls_and_rooms
 from app.interpretation.opencv.scale import ASSUMED_IMAGE_WIDTH_M, estimate_scale
 from app.interpretation.opencv.types import Unsupported
-from app.interpretation.opencv.walls import detect_walls
 from app.schema import FloorPlan, Scale, SourceImage
 from app.schema.interpretation import Interpretation, InterpretationReport, ScaleReport, StageReport
 
-PIPELINE_VERSION = "opencv-1"
+PIPELINE_VERSION = "opencv-2"
 log = logging.getLogger(__name__)
 
 STAGES: dict[str, str] = {
@@ -84,12 +83,21 @@ def run_stages(image: np.ndarray, *, floorplan_id: str, width_px: int, height_px
         pre, ev = timed("preprocess", lambda: preprocess(image), lambda p: f"{p.gray.shape[1]}×{p.gray.shape[0]} px working image")
         yield ev
 
+        # Small images are also read enlarged, and double-line walls are tried when no solid walls are found;
+        # rooms are detected here too, to compare the readings.
         yield StageEvent("walls", STAGES["walls"], "started")
-        walls, ev = timed("walls", lambda: detect_walls(pre), lambda w: _plural(len(w.walls), "wall") + f", ~{w.thickness_px:.0f} px thick")
+        reading, ev = timed(
+            "walls", lambda: read_walls_and_rooms(image, pre),
+            lambda r: _plural(len(r.walls.walls), "wall") + (
+                f", ~{r.walls.thickness_px:.0f} px thick" if r.upscale == 1.0
+                else f", ~{r.walls.thickness_px / r.upscale:.0f} px thick (read at {r.upscale:g}× size)"
+            ),
+        )
         yield ev
+        pre, walls = reading.pre, reading.walls
 
         yield StageEvent("rooms", STAGES["rooms"], "started")
-        rooms, ev = timed("rooms", lambda: detect_rooms(pre, walls), lambda r: _plural(len(r.rooms), "room"))
+        rooms, ev = timed("rooms", lambda: reading.rooms, lambda r: _plural(len(r.rooms), "room"))
         yield ev
 
         yield StageEvent("openings", STAGES["openings"], "started")
@@ -127,6 +135,7 @@ def run_stages(image: np.ndarray, *, floorplan_id: str, width_px: int, height_px
     overall *= 1 - 0.5 * walls.unexplained_ratio
     if not built.plan.rooms:
         overall *= 0.6
+    overall = min(overall, reading.confidence_cap)  # e.g. walls reconstructed from double outlines
     report = InterpretationReport(
         pipeline_version=PIPELINE_VERSION,
         supported=True,

@@ -333,5 +333,5 @@ def detect_walls(pre: Preprocessed) -> WallDetection:
         )
     return WallDetection(
         thickness_px=t_wall, min_thickness_px=k, walls=tuple(final), gaps=gaps, wall_mask=wall_mask,
-        unexplained_ratio=float(unexplained), warnings=tuple(warnings),
+        unexplained_ratio=float(unexplained), warnings=tuple(warnings), thin_px=thin,
     )

@@ -68,6 +68,8 @@ interface Props {
   groundY: number;
   /** False in VR: the headset view keeps its own ground and is never drawn with the surroundings. */
   visible?: boolean;
+  /** First person: the colour the ground fades into (the sky's horizon). Null: the studio backdrop. */
+  haze?: string | null;
 }
 
 /**
@@ -75,7 +77,7 @@ interface Props {
  * Separate from the house: it reads the engine's output but never changes it, casts no shadows
  * (plants get soft contact shadows instead), and is static, so it costs nothing while idle.
  */
-export default function OutdoorEnvironment({ scene, style, footprint, groundY, visible = true }: Props) {
+export default function OutdoorEnvironment({ scene, style, footprint, groundY, visible = true, haze = null }: Props) {
   const gl = useThree((s) => s.gl);
   const invalidate = useThree((s) => s.invalidate);
   const kit = useMemo(() => createKit(), []);
@@ -133,6 +135,10 @@ export default function OutdoorEnvironment({ scene, style, footprint, groundY, v
     kit.fade.uniforms.siteFade.value.set(plan.fade[0], plan.fade[1]);
     invalidate();
   }, [kit, plan, invalidate]);
+  useEffect(() => {
+    kit.fade.setHaze(haze);
+    invalidate();
+  }, [kit, haze, invalidate]);
   // The fade samples the backdrop gradient by screen row: keep it in step with the canvas size.
   const size = useMemo(() => new THREE.Vector2(), []);
   useFrame(() => {
